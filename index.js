@@ -1,6 +1,6 @@
 //imports
 const server = require("./server");
-
+const { db_connection } = require("./src/config/db_connection");
 //methods
 
 /**
@@ -13,6 +13,7 @@ function start_server() {
   server.listen(process.env.PORT, () => {
     console.log(`Listening on port ${process.env.PORT}`);
   });
+  db_connection();
 }
 
 start_server();
