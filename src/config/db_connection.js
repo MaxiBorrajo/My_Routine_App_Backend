@@ -1,4 +1,5 @@
 const pg = require("pg");
+const CustomError = require("../utils/custom_error");
 
 const pool = new pg.Pool({
   user: process.env.DB_USER,
@@ -8,12 +9,19 @@ const pool = new pg.Pool({
   port: process.env.DB_PORT,
 });
 
+/**
+ * Establish connection with database
+ * @throws {Error} - If it cannot connect with database throws an error.
+ */
 async function db_connection() {
   const connection = await pool.connect();
   if (connection._connected) {
     console.log("Database connection successful");
   } else {
-    throw Error("An error has ocurred during connection with database");
+    throw new CustomError(
+      "An error has ocurred during connection with database",
+      500
+    );
   }
 }
 

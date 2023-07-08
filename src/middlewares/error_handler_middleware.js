@@ -1,7 +1,7 @@
 //imports
 const { return_response } = require("../utils/utils_functions");
 
-/**
+/*
  * Middleware that handles errors from a http request.
  * @param {Error} err - The error that has occurred.
  * @param {Object} req - Request's object from the http request

@@ -1,4 +1,6 @@
 const CustomError = require("../utils/custom_error");
+const { are_equal } = require("../utils/utils_functions");
+const _ = require("lodash");
 
 /**
  * Middleware function that checks if the body of the request meets certain requirements.
@@ -94,26 +96,41 @@ function body_must_not_contain_attributes(attributes_to_exclude) {
   };
 }
 
-function meets_email_submission_requirements(req, res, next) {
-  const attributes_required = ["email", "name", "text"];
-  const body_attributes = Object.keys(req.body);
-  const contain_all_attributes_required = attributes_required.every(
-    (attribute) => body_attributes.includes(attribute)
-  );
-  if (!contain_all_attributes_required) {
-    return next(
-      new CustomError(
-        `Some attribute is missing, to send us feeback the body must contain: email, name and text attributes`,
-        400
-      )
-    );
-  }
-  next();
+
+/**
+ * Creates a middleware function that checks if the body of the request does contain specified attributes.
+ *
+ * @param {string[]} must_attributes - An array of attribute names that must be present in the request body.
+ * @returns {Function} - A middleware function that checks the presence of the specified attributes.
+ * @throws {CustomError} - If any of the must attributes are not found in the request body.
+ */
+function body_must_contain_attributes(must_attributes) {
+  /**
+   * Middleware function that checks if the body of the request does contain the specified attributes.
+   *
+   * @param {Object} req - The request object from the HTTP request.
+   * @param {Object} res - The response object from the HTTP response.
+   * @param {Function} next - The next function in the middleware chain.
+   * @throws {CustomError} - If any of the must attributes are not found in the request body.
+   */
+  return function (req, res, next) {
+    const body_attributes = Object.keys(req.body);
+    if (!are_equal(body_attributes.sort(), must_attributes.sort())) {
+      const missing_attributes = _.difference(must_attributes, body_attributes);
+      return next(
+        new CustomError(
+          `The body is missing the following attributes ${missing_attributes}`,
+          400
+        )
+      );
+    }
+    return next();
+  };
 }
 
 module.exports = {
   meets_with_email_requirements,
   meets_with_password_requirements,
   body_must_not_contain_attributes,
-  meets_email_submission_requirements
+  body_must_contain_attributes
 };
