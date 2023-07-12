@@ -10,25 +10,25 @@ cloudinary.config({
   secure: true,
 });
 
-const multerStorage = multer.diskStorage({
+const multer_storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "");
   },
   filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const filename = file.fieldname + "-" + uniqueSuffix;
+    const unique_suffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const filename = file.fieldname + "-" + unique_suffix;
     cb(null, filename);
   },
 });
 
-const uploadMulter = multer({ storage: multerStorage });
+const upload_multer = multer({ storage: multer_storage });
 
 /**
  * Delete an image file from local storage
  * @param {string} filepath - The path of the file to be deleted
  * @returns {void}
  */
-function deleteImageFromLocalStorage(filepath) {
+function delete_image_from_localStorage(filepath) {
   fs.unlink(filepath, (error) => {
     if (error) {
       console.error(error);
@@ -42,19 +42,19 @@ function deleteImageFromLocalStorage(filepath) {
  * @param {Object} file - The file object to be resized
  * @returns {Promise<string>} A promise that resolves with the path of the optimized image file
  */
-function resizeImage(file) {
+function resize_image(file) {
   return new Promise((resolve, reject) => {
-    const optimizedFileName = `${file.fieldname}_optimize`;
+    const optimized_filename = `${file.fieldname}_optimize`;
 
     sharp(file.path)
       .resize(300, 300)
-      .toFile(optimizedFileName, (error, resizeFile) => {
+      .toFile(optimized_filename, (error, resize_file) => {
         if (error) {
           reject(error);
           return;
         }
-        deleteImageFromLocalStorage(file.path);
-        resolve(optimizedFileName);
+        delete_image_from_localStorage(file.path);
+        resolve(optimized_filename);
       });
   });
 }
@@ -66,14 +66,14 @@ function resizeImage(file) {
  * the public_id and url of the uploaded image
  * @throws {Error} If there was an error during the upload process
  */
-async function uploadImageToCloud(filepath) {
+async function upload_image_to_cloud(filepath) {
   try {
-    const uploadedImage = await cloudinary.v2.uploader.upload(filepath);
-    const uploadedImageInfo = {
-      public_id: uploadedImage.public_id,
-      url: uploadedImage.secure_url,
+    const uploaded_image = await cloudinary.v2.uploader.upload(filepath);
+    const uploaded_image_info = {
+      public_id: uploaded_image.public_id,
+      url: uploaded_image.secure_url,
     };
-    return uploadedImageInfo;
+    return uploaded_image_info;
   } catch (error) {
     throw error;
   }
@@ -86,10 +86,10 @@ async function uploadImageToCloud(filepath) {
  * the result of the removal
  * @throws {Error} If there was an error during the upload process
  */
-async function deleteImageInCloud(public_id) {
+async function delete_image_in_cloud(public_id) {
   try {
-    const uploadedImage = await cloudinary.v2.uploader.destroy(public_id);
-    return uploadedImage;
+    const uploaded_image = await cloudinary.v2.uploader.destroy(public_id);
+    return uploaded_image;
   } catch (error) {
     throw error;
   }
@@ -102,17 +102,17 @@ async function deleteImageInCloud(public_id) {
  * @param {Function} next - The next function from Express
  * @returns {void}
  */
-function processImage(req, res, next) {
+function process_image(req, res, next) {
   if (!req.file) {
     return next();
   }
-  resizeImage(req.file)
-    .then(async (optimizedImagePath) => {
-      const cloudInfo = await uploadImageToCloud(optimizedImagePath);
+  resize_image(req.file)
+    .then(async (optimized_image_path) => {
+      const cloud_info = await upload_image_to_cloud(optimized_image_path);
 
-      deleteImageFromLocalStorage(optimizedImagePath);
-      req.file.public_id = cloudInfo.public_id;
-      req.file.url = cloudInfo.url;
+      delete_image_from_localStorage(optimized_image_path);
+      req.file.public_id = cloud_info.public_id;
+      req.file.url = cloud_info.url;
       next();
     })
     .catch((error) => {
@@ -121,7 +121,8 @@ function processImage(req, res, next) {
 }
 
 module.exports = {
-  uploadMulter,
-  processImage,
-  deleteImageInCloud,
+  upload_multer,
+  process_image,
+  delete_image_in_cloud,
+  upload_image_to_cloud
 };

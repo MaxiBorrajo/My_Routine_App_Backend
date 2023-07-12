@@ -1,5 +1,4 @@
 const CustomError = require("../utils/custom_error");
-const { are_equal } = require("../utils/utils_functions");
 const _ = require("lodash");
 
 /**
@@ -115,11 +114,11 @@ function body_must_contain_attributes(must_attributes) {
    */
   return function (req, res, next) {
     const body_attributes = Object.keys(req.body);
-    if (!are_equal(body_attributes.sort(), must_attributes.sort())) {
+    if (!_.isEqual(body_attributes.sort(), must_attributes.sort())) {
       const missing_attributes = _.difference(must_attributes, body_attributes);
       return next(
         new CustomError(
-          `The body is missing the following attributes ${missing_attributes}`,
+          `The body is missing the following attributes: ${missing_attributes}`,
           400
         )
       );

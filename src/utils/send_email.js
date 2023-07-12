@@ -1,50 +1,41 @@
-const node_mailer = require("nodemailer");
 const CustomError = require("./custom_error");
 //  const fs = require('fs');
 
+const sgMail = require("@sendgrid/mail");
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
 /**
- * Function that sends an email using Node.js nodemailer package
+ * Function that sends an email using send grid package
  *
  * @param {Object} options - The options for the email to send
  * @param {string} options.to - The email address of the recipient
  * @param {string} options.subject - The subject of the email
  * @param {string} options.text - The text content of the email
  * @param {string} [options.html] - The HTML content of the email (optional)
- * @returns {Promise<Object>} A Promise that resolves with the info object returned by nodemailer
- * on successful email delivery, or rejects with an error if there was an issue sending the email
+ * @returns {Promise<Object>} A Promise that resolves with the info object returned by send grid
+ * on successful email delivery
+ * @throws {CustomError} If something goes wrong trying to send the email
  */
 function send_email(options) {
-  /**
-   * Creates a nodemailer transporter object with the specified options
-   */
-  const transporter = node_mailer.createTransport({
-    service: process.env.EMAIL_SERVICE,
-    auth: {
-      user: process.env.EMAIL_USERNAME,
-      pass: process.env.EMAIL_PASSWORD,
-    },
-  });
-  /**
-   * Creates the options object with the information of the email to send
-   */
-  const mail_options = {
+  const msg = {
+    to: options.to, 
     from: process.env.EMAIL_FROM,
-    to: options.to,
     subject: options.subject,
-    html: options.text,
+    text: options.text,
+    html: options.html,
   };
-  /**
-   * Uses the transporter object to send the email with the specified options
-   */
-  return new Promise((resolve, reject) => {
-    transporter.sendMail(mail_options, (error, info) => {
-      if (error) {
-        reject(new CustomError(`Failed to send email: ${error.message}`, 500));
-      } else {
-        resolve(info);
-      }
+
+  sgMail
+    .send(msg)
+    .then(() => {
+      console.log('Email sent');
+    })
+    .catch((error) => {
+      console.error(
+        new CustomError(`Failed to send email: ${error}`, 500)
+      );
     });
-  });
 }
 
 module.exports = send_email;

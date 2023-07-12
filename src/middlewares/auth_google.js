@@ -1,6 +1,14 @@
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth2").Strategy;
-const { create_new_user, find_user_by_email } = require("../controllers/user_controller");
+const {
+  create_new_user,
+  find_user_by_email,
+  update_user,
+} = require("../repositories/user_repository");
+const {
+  upload_image_to_cloud
+} = require("../middlewares/upload_images_middleware");
+const { are_equal } = require("../utils/utils_functions");
 const CustomError = require("../utils/custom_error");
 
 passport.use(
@@ -25,29 +33,40 @@ passport.use(
      */
     async function (request, accessToken, refreshToken, profile, done) {
       try {
-        const found_user = await find_user_by_email(profile.email);
+        const user = await find_user_by_email(profile.email);
 
-        if (found_user.rowCount === 0) {
+        if (are_equal(user.length, 0)) {
+          const profile_photo = await upload_image_to_cloud(profile.picture);
+
           const new_user = {
             email: profile.email,
             name: profile.given_name,
-            lastName: profile.family_name,
-            username: profile.displayName,
-            urlProfilePhoto: profile.picture,
+            last_name: profile.family_name,
             password: "",
-            date_birth: "1900-01-01",
-            theme: "light",
-            experience: "beginner",
-            weight: "KG",
-            goal: "",
           };
 
-          await create_new_user(new_user);
-          return done(null, new_user);
+          const created_user = await create_new_user(new_user);
+
+          if (!are_equal(created_user, 1)) {
+            return next(
+              new CustomError("Something went wrong. User not created", 500)
+            );
+          }
+
+          let found_user = await find_user_by_email(profile.email);
+
+          found_user[0].username = profile.displayName;
+
+          found_user[0].public_id_profile_photo = profile_photo.public_id;
+
+          found_user[0].url_profile_photo = profile_photo.url;
+
+          await update_user(found_user[0]);
+
+          return done(null, found_user[0]);
         }
 
-        return done(null, found_user.rows[0]);
-
+        return done(null, found_user[0]);
       } catch (error) {
         return done(
           new CustomError(`Something went wrong. Error: ${error.message}`, 500)
@@ -56,27 +75,22 @@ passport.use(
     }
   )
 );
-
-passport.serializeUser(
-  function (user, done) {
-    try {
-      done(null, user);
-    } catch (error) {
-      return done(
-        new CustomError(`Something went wrong. Error: ${error.message}`, 500)
-      );
-    }
+passport.serializeUser(function (user, done) {
+  try {
+    done(null, user);
+  } catch (error) {
+    return done(
+      new CustomError(`Something went wrong. Error: ${error.message}`, 500)
+    );
   }
-);
+});
 
-passport.deserializeUser(
-  function (user, done) {
-    try {
-      done(null, user);
-    } catch (error) {
-      return done(
-        new CustomError(`Something went wrong. Error: ${error.message}`, 500)
-      );
-    }
+passport.deserializeUser(function (user, done) {
+  try {
+    done(null, user);
+  } catch (error) {
+    return done(
+      new CustomError(`Something went wrong. Error: ${error.message}`, 500)
+    );
   }
-);
+});

@@ -1,220 +1,205 @@
-const { pool } = require("../config/db_connection");
+//imports
+const {
+  create_new_routine,
+  delete_routine_by_id_user_id_routine,
+  delete_routines_by_id_user,
+  find_routine_by_id_user_id_routine,
+  find_routines_by_id_user,
+  find_routines_of_exercise_by_id_user_idExercise,
+  update_routine,
+} = require("../repositories/routine_repository");
 const CustomError = require("../utils/custom_error");
+const {
+  return_response,
+  is_greater_than,
+  are_equal,
+} = require("../utils/utils_functions");
+const _ = require("lodash");
 
+//functions
 /**
- * Creates a new routine
- * @param {Object} routine - Object that contains information about the routine entity. It must contain:
- * routine.id_user {number} - User's id. Must be stored in database and be an integer
- * routine.routine_name  {string} - Name of the routine
- * routine.description {string} - Description of the routine
- * routine.time_before_start {string} - Time before start a routine 
- * ('5 seconds', '10 minutes', '10 minutes 5 seconds')
- * @returns {Promise<Object>} - A promise of the created routine
- * @throws {CustomError} - If something goes wrong with the database
+ * Controller that creates a new routine
+ *
+ * @param {Object} req - The request object from the HTTP request.
+ * @param {Object} res - The response object from the HTTP response.
+ * @param {Function} next - The next function in the middleware chain.
+ * @throws {CustomError} if something goes wrong with database
  */
-async function create_new_routine(routine) {
+async function create_routine(req, res, next) {
   try {
-    const { id_user, routine_name, description, time_before_start } = routine;
-    const new_routine = await pool.query(
-      `
-        INSERT INTO "ROUTINE" 
-        (id_user, routine_name,
-         description, time_before_start) VALUES 
-        ($1, $2, $3, $4); 
-        `,
-      [id_user, routine_name, description, time_before_start]
-    );
-    return new_routine.rowCount;
+    const { routine_name, time_before_start, description } = req.body;
+
+    const new_routine = {
+      id_user: req.id_user,
+      routine_name: routine_name,
+      time_before_start: time_before_start,
+      description: description,
+    };
+
+    const created_routine = await create_new_routine(new_routine);
+
+    if (are_equal(created_routine.length, 0)) {
+      return next(
+        new CustomError("Something went wrong. Routine not created", 500)
+      );
+    }
+
+    return return_response(res, 201, "Routine created successfully", true);
   } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
+    next(error);
   }
 }
 
 /**
- * Finds routines by id_user. It can be ordered
- * @param {number} id_user - User's id. It must be a integer and be store in database
- * @param {string} sort_by - Routine's attribute to guide the order
- * @param {string} order - It's the way to order. It can be ASC or DESC
- * @returns {Promise<Object>} - A promise of the found routines
- * @throws {CustomError} - If something goes wrong with the database
+ * Controller that finds the routines of a user. It can be ordered
+ *
+ * @param {Object} req - The request object from the HTTP request.
+ * @param {Object} res - The response object from the HTTP response.
+ * @param {Function} next - The next function in the middleware chain.
+ * @throws {CustomError} if something goes wrong with database
  */
-async function find_routines_by_id_user(id_user, sort_by, order) {
+async function find_routines(req, res, next) {
   try {
-    let query = `
-      SELECT r.* FROM "ROUTINE" AS r
-      WHERE r.id_user = $1
-    `;
+    const queries = Object.keys(req.query);
+    if (is_greater_than(queries.length, 0)) {
+      if (!req.query.sort_by || !req.query.order) {
+        return next(
+          new CustomError(
+            "The allowed queries are sort_by and order, and they must be sent together or not send at all.",
+            400
+          )
+        );
+      }
 
-    query += sort_by && order ? `ORDER BY ${sort_by} ${order}` : "";
+      const allowed_sort_by_queries = [
+        "routine_name",
+        "created_at",
+        "usage_routine",
+      ];
+      const allowed_order_queries = ["ASC", "DESC"];
 
-    const found_routines = await pool.query(query, [id_user]);
-    return found_routines.rows;
+      if (!allowed_sort_by_queries.includes(req.query.sort_by)) {
+        return next(
+          new CustomError(
+            "The sort_by query only accepts 'routine_name', 'created_at' or 'usage_routine' as values",
+            400
+          )
+        );
+      }
+
+      if (!allowed_order_queries.includes(req.query.order)) {
+        return next(
+          new CustomError(
+            "The query order only accepts 'ASC' or 'DESC' as values",
+            400
+          )
+        );
+      }
+
+      const found_routines = await find_routines_by_id_user(
+        req.id_user,
+        req.query.sort_by,
+        req.query.order
+      );
+
+      return return_response(res, 200, found_routines, true);
+    }
+
+    const found_routines = await find_routines_by_id_user(req.id_user);
+
+    return return_response(res, 200, found_routines, true);
   } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
+    next(error);
   }
 }
 
 /**
- * Finds a specific routine by id_user and id_routine
- * @param {number} id_user - User's id. It must be a integer and be store in database
- * @param {number} id_routine - Routine's id. It must be a integer and be store in database
- * @returns {Promise<Object>} - A promise of the found routine
- * @throws {CustomError} - If something goes wrong with the database
+ * Controller that find a specific routine
+ *
+ * @param {Object} req - The request object from the HTTP request.
+ * @param {Object} res - The response object from the HTTP response.
+ * @param {Function} next - The next function in the middleware chain.
+ * @throws {CustomError} If the routine isn't found or if something goes wrong with database
  */
-async function find_routine_by_id_user_id_routine(id_user, id_routine) {
+async function find_specific_routine(req, res, next) {
   try {
-    const found_routine = await pool.query(
-      `
-      SELECT r.* FROM "ROUTINE" AS r
-      WHERE r.id_user = $1 AND r.id_routine = $2
-      `,
-      [id_user, id_routine]
+    const found_routine = await find_routine_by_id_user_id_routine(
+      req.id_user,
+      req.params.id_routine
     );
-    return found_routine.rows;
+
+    if (are_equal(found_routine.length, 0)) {
+      next(new CustomError("Routine not found", 404));
+    }
+
+    return return_response(res, 200, found_routine[0], true);
   } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
+    next(error);
   }
 }
 
 /**
- * Updates a specific routine
- * @param {Object} routine - Object that contains information about the routine entity. It must contain:
- * routine.id_user {number} - User's id. Must be stored in database and be an integer.
- * routine.id_routine {number} - Routine's id. Must be stored in database and be an integer.
- * routine.routine_name  {string} - Name of the routine
- * routine.description {string} - Description of the routine
- * routine.is_favorite {boolean} - If a routine is favorite or not
- * routine.time_before_start {string} - Time before start a routine 
- * routine.usage_routine {string} - How many time this routine was used
- * ('5 seconds', '10 minutes', '10 minutes 5 seconds')
- * @returns {Promise<Object>} - A promise of the updated routine
- * @throws {CustomError} - If something goes wrong with the database
+ * Controller that updates a specific routine
+ *
+ * @param {Object} req - The request object from the HTTP request.
+ * @param {Object} res - The response object from the HTTP response.
+ * @param {Function} next - The next function in the middleware chain.
+ * @throws {CustomError} If the routine isn't found or if something goes wrong with database
  */
-async function update_routine(routine) {
+async function update_specific_routine(req, res, next) {
   try {
-    const {
-      id_user,
-      id_routine,
-      routine_name,
-      description,
-      is_favorite,
-      time_before_start,
-      usage_routine
-    } = routine;
+    if (!req.body) {
+      return next(
+        new CustomError("You must update, at least, one attribute", 400)
+      );
+    }
 
-    const updated_routine = await pool.query(
-      `
-    UPDATE "ROUTINE"
-    SET routine_name = $3,
-    description = $4,
-    is_favorite = $5,
-    time_before_start = $6,
-    usage_routine = $7
-    WHERE id_user = $1 AND id_routine = $2
-    `,
-      [id_user, id_routine, routine_name, description, is_favorite, time_before_start, usage_routine]
+    const found_routine = await find_routine_by_id_user_id_routine(
+      req.id_user,
+      req.params.id_routine
     );
-    return updated_routine.rowCount;
+
+    if (are_equal(found_routine.length, 0)) {
+      return next(new CustomError("Routine not found", 404));
+    }
+
+    const new_routine_information = {
+      id_user: req.id_user,
+      id_routine: found_routine[0].id_routine,
+      routine_name: req.body.routine_name
+        ? req.body.routine_name
+        : found_routine[0].routine_name,
+      usage_routine: req.body.usage_routine
+        ? req.body.usage_routine
+        : found_routine[0].usage_routine,
+      time_before_start: req.body.time_before_start
+        ? req.body.time_before_start
+        : found_routine[0].time_before_start,
+      description: req.body.description
+        ? req.body.description
+        : found_routine[0].description,
+      is_favorite: req.body.is_favorite
+        ? req.body.is_favorite
+        : found_routine[0].is_favorite,
+    };
+
+    const updated_routine = await update_routine(new_routine_information);
+
+    if (are_equal(updated_routine, 0)) {
+      return next(new CustomError("Routine not updated", 500));
+    }
+
+    delete new_routine_information.id_user;
+
+    return_response(res, 200, new_routine_information, true);
   } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
+    next(error);
   }
 }
-
-/**
- * Deletes all routines by id_user
- * @param {number} id_user - User's id. It must be a integer and be store in database
- * @returns {Promise<Object>} - A promise of the deleted routines
- * @throws {CustomError} - If something goes wrong with the database
- */
-async function delete_routines_by_id_user(id_user) {
-  try {
-    const deleted_routines = await pool.query(
-      `
-    DELETE FROM "ROUTINE" AS r
-    WHERE r.id_user = $1
-    `,
-      [id_user]
-    );
-    return deleted_routines.rowCount;
-  } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
-  }
-}
-
-/**
- * Delete a specific routine by id_user and id_routine
- * @param {number} id_user - User's id. It must be a integer and be store in database
- * @param {number} id_routine - Routine's id. It must be a integer and be store in database
- * @returns {Promise<Object>} - A promise of the deleted routine
- * @throws {CustomError} - If something goes wrong with the database
- */
-async function delete_routine_by_id_user_id_routine(id_user, id_routine) {
-  try {
-    const deleted_routine = await pool.query(
-      `
-      DELETE FROM "ROUTINE" AS r
-      WHERE r.id_user = $1 AND r.id_routine = $2
-      `,
-      [id_user, id_routine]
-    );
-    return deleted_routine.rowCount;
-  } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
-  }
-}
-
-/**
- * Finds all routines associated with an exercise
- * @param {number} id_user - User's id. It must be a integer and be store in database
- * @param {number} idExercise - Exercise's id. It must be a integer and be store in database
- * @returns {Promise<Object>} - A promise of the found routine
- * @throws {CustomError} - If something goes wrong with the database
- */
-async function find_routines_of_exercise_by_id_user_idExercise(id_user, idExercise) {
-  try {
-    const found_routines = await pool.query(
-      `
-      SELECT r.* FROM "ROUTINE" AS r
-      JOIN COMPOSEDBY AS c ON r.id_user = c.id_user AND r.id_routine = c.id_routine
-      WHERE r.id_user = $1 AND c.id_exercise = $2
-      `,
-      [id_user, idExercise]
-    );
-    return found_routines.rows;
-  } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
-  }
-}
-
-
 
 module.exports = {
-  create_new_routine,//✓ //✓
-  delete_routine_by_id_user_id_routine,//✓ //✓
-  delete_routines_by_id_user,//✓ //✓ 
-  find_routine_by_id_user_id_routine,//✓ //✓
-  find_routines_by_id_user,//✓ //✓
-  find_routines_of_exercise_by_id_user_idExercise, //✓ //✓
-  update_routine//✓ //✓
+  create_routine,
+  find_routines,
+  find_specific_routine,
+  update_specific_routine,
 };
