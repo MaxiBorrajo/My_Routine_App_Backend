@@ -114,7 +114,8 @@ function body_must_contain_attributes(must_attributes) {
    */
   return function (req, res, next) {
     const body_attributes = Object.keys(req.body);
-    if (!_.isEqual(body_attributes.sort(), must_attributes.sort())) {
+    const intersected_attributes = _.intersection(body_attributes, must_attributes)
+    if (!_.isEqual(intersected_attributes.sort(), must_attributes.sort())) {
       const missing_attributes = _.difference(must_attributes, body_attributes);
       return next(
         new CustomError(

@@ -29,12 +29,7 @@ const upload_multer = multer({ storage: multer_storage });
  * @returns {void}
  */
 function delete_image_from_localStorage(filepath) {
-  fs.unlink(filepath, (error) => {
-    if (error) {
-      console.error(error);
-      return;
-    }
-  });
+  fs.unlinkSync(filepath);
 }
 
 /**
@@ -47,13 +42,12 @@ function resize_image(file) {
     const optimized_filename = `${file.fieldname}_optimize`;
 
     sharp(file.path)
-      .resize(300, 300)
+      .resize(300)
       .toFile(optimized_filename, (error, resize_file) => {
         if (error) {
           reject(error);
           return;
         }
-        delete_image_from_localStorage(file.path);
         resolve(optimized_filename);
       });
   });
@@ -110,7 +104,9 @@ function process_image(req, res, next) {
     .then(async (optimized_image_path) => {
       const cloud_info = await upload_image_to_cloud(optimized_image_path);
 
+      delete_image_from_localStorage(req.file.path);
       delete_image_from_localStorage(optimized_image_path);
+
       req.file.public_id = cloud_info.public_id;
       req.file.url = cloud_info.url;
       next();
@@ -124,5 +120,5 @@ module.exports = {
   upload_multer,
   process_image,
   delete_image_in_cloud,
-  upload_image_to_cloud
+  upload_image_to_cloud,
 };

@@ -15,8 +15,13 @@ const CustomError = require("../utils/custom_error");
  */
 async function create_new_exercise(exercise) {
   try {
-    const { id_user, exercise_name, intensity, description, time_after_exercise } =
-      exercise;
+    const {
+      id_user,
+      exercise_name,
+      intensity,
+      description,
+      time_after_exercise,
+    } = exercise;
 
     const new_exercise = await pool.query(
       `
@@ -48,7 +53,9 @@ async function create_new_exercise(exercise) {
 async function find_exercises_by_id_user(id_user, sort_by, order) {
   try {
     let query = `
-    SELECT e.* FROM EXERCISE AS e
+    SELECT e.id_exercise, e.exercise_name,
+    e.created_at, e.is_favorite, e.description,
+    e.time_after_exercise, e.intensity FROM EXERCISE AS e
     WHERE e.id_user = $1
   `;
     query += sort_by && order ? `ORDER BY ${sort_by} ${order}` : "";
@@ -80,7 +87,9 @@ async function find_exercises_by_id_user_idMuscleGroup(
 ) {
   try {
     let query = `
-    SELECT DISTINCT e.* FROM EXERCISE AS e
+    SELECT DISTINCT e.id_exercise, e.exercise_name,
+    e.created_at, e.is_favorite, e.description,
+    e.time_after_exercise, e.intensity FROM EXERCISE AS e
     JOIN WORKS w ON e.id_user = w.id_user 
     AND e.id_exercise = w.id_exercise
     WHERE e.id_user = $1 AND (
@@ -88,16 +97,14 @@ async function find_exercises_by_id_user_idMuscleGroup(
 
     let params = [id_user];
 
-    if (muscle_groups.length > 0) {
-      muscle_groups.forEach((id_muscle_group, index) => {
-        if (index === muscle_groups.length - 1) {
-          query += `w.id_muscle_group = $${index + 2})\n`;
-        } else {
-          query += `w.id_muscle_group = $${index + 2} OR\n`;
-        }
-        params.push(id_muscle_group);
-      });
-    }
+    muscle_groups.forEach((id_muscle_group, index) => {
+      if (index === muscle_groups.length - 1) {
+        query += `w.id_muscle_group = $${index + 2})\n`;
+      } else {
+        query += `w.id_muscle_group = $${index + 2} AND\n`;
+      }
+      params.push(id_muscle_group);
+    });
     query += sort_by && order ? `ORDER BY ${sort_by} ${order}` : "";
     const found_exercises = await pool.query(query, params);
     return found_exercises.rows;
@@ -112,7 +119,7 @@ async function find_exercises_by_id_user_idMuscleGroup(
 /**
  * Finds exercises by id_user and intensity. It can be ordered
  * @param {number} id_user - User's id. It must be a integer and be store in database
- * @param {number[]} intensities - Array of intensities of the exercise. 1 (low), 2 (mid), 3 (high)
+ * @param {number} intensity - Intensity of the exercise. 1 (low), 2 (mid), 3 (high)
  * @param {string} sort_by - Attribute of an exercise by which to order the results
  * @param {string} order - ASC (ascending) or DESC (descending)
  * @returns {Promise<Object>} - A promise of the found exercises
@@ -120,29 +127,61 @@ async function find_exercises_by_id_user_idMuscleGroup(
  */
 async function find_exercises_by_id_user_intensity(
   id_user,
-  intensities,
+  intensity,
   sort_by,
   order
 ) {
   try {
     let query = `
-    SELECT DISTINCT e.* FROM EXERCISE AS e
-    WHERE e.id_user = $1 AND (
+    SELECT DISTINCT e.id_exercise, e.exercise_name,
+    e.created_at, e.is_favorite, e.description,
+    e.time_after_exercise, e.intensity FROM EXERCISE AS e
+    WHERE e.id_user = $1 AND e.intensity = $2
+  `;
+
+    query += sort_by && order ? `ORDER BY ${sort_by} ${order}` : "";
+
+    const found_exercises = await pool.query(query, [id_user, intensity]);
+
+    return found_exercises.rows;
+  } catch (error) {
+    throw new CustomError(
+      `Something went wrong with database. Error: ${error.message}`,
+      500
+    );
+  }
+}
+
+/**
+ * Finds exercises by id_user and if is favorite or not. It can be ordered
+ * @param {number} id_user - User's id. It must be a integer and be store in database
+ * @param {boolean} is_favorite - true if the exercise if a favorite one, false otherwise
+ * @param {string} sort_by - Attribute of an exercise by which to order the results
+ * @param {string} order - ASC (ascending) or DESC (descending)
+ * @returns {Promise<Object>} - A promise of the found exercises
+ * @throws {CustomError} - If something goes wrong with the database
+ */
+async function find_exercises_by_id_user_isFavorite(
+  id_user,
+  is_favorite,
+  sort_by,
+  order
+) {
+  try {
+    let query = `
+    SELECT DISTINCT e.id_exercise, e.exercise_name,
+    e.created_at, e.is_favorite, e.description,
+    e.time_after_exercise, e.intensity FROM EXERCISE AS e
+    WHERE e.id_user = $1 AND 
   `;
     let params = [id_user];
 
-    if (intensities.length > 0) {
-      intensities.forEach((intensity, index) => {
-        if (index === intensities.length - 1) {
-          query += `e.intensity = $${index + 2})\n`;
-        } else {
-          query += `e.intensity = $${index + 2} OR\n`;
-        }
-        params.push(intensity);
-      });
-    }
+    query += is_favorite ? "is_favorite\n" : "NOT is_favorite\n";
+
     query += sort_by && order ? `ORDER BY ${sort_by} ${order}` : "";
+
     const found_exercises = await pool.query(query, params);
+
     return found_exercises.rows;
   } catch (error) {
     throw new CustomError(
@@ -163,7 +202,9 @@ async function find_exercise_by_id_user_id_exercise(id_user, id_exercise) {
   try {
     const found_exercise = await pool.query(
       `
-      SELECT * FROM EXERCISE AS e
+      SELECT e.id_exercise, e.exercise_name,
+      e.created_at, e.is_favorite, e.description,
+      e.time_after_exercise, e.intensity FROM EXERCISE AS e
       WHERE e.id_user = $1 AND e.id_exercise = $2
       `,
       [id_user, id_exercise]
@@ -289,7 +330,9 @@ async function find_exercise_by_id_user_idRoutine(id_user, idRoutine) {
   try {
     const found_exercises = await pool.query(
       `
-      SELECT e.* FROM EXERCISE AS e
+      SELECT DISTINCT e.id_exercise, e.exercise_name,
+      e.created_at, e.is_favorite, e.description,
+      e.time_after_exercise, e.intensity, c.exercise_order FROM EXERCISE AS e
       JOIN COMPOSEDBY AS c ON e.id_user = c.id_user AND e.id_exercise = c.id_exercise
       WHERE e.id_user = $1 AND c.id_routine = $2
       ORDER BY c.exercise_order ASC
@@ -306,13 +349,14 @@ async function find_exercise_by_id_user_idRoutine(id_user, idRoutine) {
 }
 
 module.exports = {
-  create_new_exercise,//✓ //✓
-  delete_exercise_by_id_user_id_exercise,//✓ //✓
+  create_new_exercise, //✓ //✓
+  delete_exercise_by_id_user_id_exercise, //✓ //✓
   delete_exercises_by_id_user, //✓ //✓
-  find_exercise_by_id_user_id_exercise,//✓ //✓
+  find_exercise_by_id_user_id_exercise, //✓ //✓
   find_exercise_by_id_user_idRoutine, //✓ //✓
-  find_exercises_by_id_user,//✓ //✓
-  find_exercises_by_id_user_idMuscleGroup,//✓ //✓
-  find_exercises_by_id_user_intensity,//✓ //✓ 
-  update_exercise,//✓ //✓ 
+  find_exercises_by_id_user, //✓ //✓
+  find_exercises_by_id_user_idMuscleGroup, //✓ //✓
+  find_exercises_by_id_user_intensity, //✓ //✓
+  find_exercises_by_id_user_isFavorite,
+  update_exercise, //✓ //✓
 };

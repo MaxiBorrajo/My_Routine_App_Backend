@@ -5,7 +5,11 @@ const {
   create_routine,
   find_routines,
   find_specific_routine,
-  update_specific_routine
+  update_specific_routine,
+  add_exercise_to_routine,
+  find_routines_of_exercise,
+  change_order_exercise_in_routine,
+  delete_exercise_from_routine
 } = require("../controllers/routine_controller");
 const auth_middleware = require("../middlewares/auth_middleware");
 const check_invalid_tokens_middleware = require("../middlewares/invalid_token_middleware");
@@ -41,7 +45,11 @@ router.post(
  * @query sort_by (optional) - The attribute by which to order, can be by routine_name, created_at or usage_routine
  * @query order (optional) - In which order to do it, ascending, ASC should be written or descending,
  * DESC should be written
- *
+ * @query filter (optional) - The attribute by which to filter, can be by day or is_favorite. 
+ * If you add filter must add filter_values too
+ * @query filter_values (optional) - The values by which to filter, if it is by a day
+ * you must add an array with the ids of those days or if it is by is_favorite 
+ * you must put either true or false as value
  * @throws {CustomError} - If the queries bring illegal values or if something goes wrong
  * with the database
  */
@@ -87,6 +95,73 @@ router.put(
   check_invalid_tokens_middleware,
   auth_middleware,
   update_specific_routine
+);
+
+/**
+ * POST route to add an exercise to a routine
+ *
+ * @route {POST} /v1/routine/:id_routine/exercise/:id_exercise
+ * @body {number} exercise_order - The position that the exercise occupy. Is required
+ *
+ * @throws {CustomError} - If attributes of the body don't match the requirements specified before
+ * or if there is an error while adding the exercise
+ */
+router.post(
+  "/:id_routine/exercise/:id_exercise",
+  validate_fields_middleware.body_must_contain_attributes([
+    "exercise_order"
+  ]),
+  check_invalid_tokens_middleware,
+  auth_middleware,
+  add_exercise_to_routine
+);
+
+/**
+ * GET route to see which routines a specific exercise belongs to
+ *
+ * @route {GET} /v1/routine/exercise/:id_exercise
+ *
+ * @throws {CustomError} - If something goes wrong with the database
+ */
+router.get(
+  "/exercise/:id_exercise",
+  check_invalid_tokens_middleware,
+  auth_middleware,
+  find_routines_of_exercise
+);
+
+/**
+ * PUT route to change the order of an exercise in a routine
+ *
+ * @route {PUT} /v1/routine/:id_routine/exercise/:id_exercise
+ * @body {number} exercise_order - The position that the exercise occupy. Is required
+ *
+ * @throws {CustomError} - If attributes of the body don't match the requirements specified before
+ * or if there is an error while changing the order
+ */
+router.put(
+  "/:id_routine/exercise/:id_exercise",
+  validate_fields_middleware.body_must_contain_attributes([
+    "exercise_order"
+  ]),
+  check_invalid_tokens_middleware,
+  auth_middleware,
+  change_order_exercise_in_routine
+);
+
+
+/**
+ * DELETE route to remove an exercise from a routine
+ *
+ * @route {DELETE} /v1/routine/:id_routine/exercise/:id_exercise
+ *
+ * @throws {CustomError} - If something goes wrong while removing the exercise
+ */
+router.delete(
+  "/:id_routine/exercise/:id_exercise",
+  check_invalid_tokens_middleware,
+  auth_middleware,
+  delete_exercise_from_routine
 );
 
 module.exports = router;

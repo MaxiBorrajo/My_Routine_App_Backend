@@ -58,6 +58,34 @@ async function find_muscle_groups_by_id_user_id_exercise(id_user, id_exercise) {
 }
 
 /**
+ * Finds a specific muscle group assigned to an exercise
+ * @param {number} id_user - User's id. It must be a integer and be store in database
+ * @param {number} id_exercise - Exercise's id. It must be a integer and be store in database
+ * @param {number} id_muscle_group - Muscle group's id. It must be a integer and be store in database
+ * @returns {Promise<Object>} - A promise of the found muscle group
+ * @throws {CustomError} - If something goes wrong with the database
+ */
+async function find_muscle_group_by_id_user_id_exercise_id_muscle_group(id_user, id_exercise, id_muscle_group) {
+  try {
+    const found_muscle_group = await pool.query(
+      `
+    SELECT m.* FROM MUSCLEGROUP AS m
+    JOIN WORKS AS w ON m.id_muscle_group = w.id_muscle_group
+    WHERE w.id_user = $1 AND w.id_exercise = $2 AND w.id_muscle_group = $3
+    `,
+      [id_user, id_exercise, id_muscle_group]
+    );
+    return found_muscle_group.rows;
+  } catch (error) {
+    throw new CustomError(
+      `Something went wrong with database. Error: ${error.message}`,
+      500
+    );
+  }
+}
+
+
+/**
  * Deletes all works of a user by id_user
  * @param {number} id_user - User's id. It must be a integer and be store in database
  * @returns {Promise<Object>} - A promise of the deleted works
@@ -142,4 +170,5 @@ module.exports = {
   delete_works_by_id_user_id_exercise, //✓ //✓
   delete_works_by_id_user_id_exercise_id_muscle_group, //✓ //✓
   find_muscle_groups_by_id_user_id_exercise, //✓ //✓
+  find_muscle_group_by_id_user_id_exercise_id_muscle_group
 };

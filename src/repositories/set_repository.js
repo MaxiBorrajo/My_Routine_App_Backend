@@ -5,6 +5,7 @@ const CustomError = require("../utils/custom_error");
  * Creates a new set
  * @param {Object} set - Object that contains information about the set entity. It must contain:
  * set.id_user {number} - User's id. Must be stored in database and be an integer
+ * set.id_set {number} - Set's id. Must be an integer
  * set.id_exercise {number} - Exercise's id. Must be stored in database and be an integer
  * set.weight {string} - How much weight is lifted in the set
  * set.rest_after_set {string} - Time after finish a set 
@@ -16,18 +17,17 @@ const CustomError = require("../utils/custom_error");
  */
 async function create_new_set(set) {
   try {
-    const { id_user, id_exercise, weight, rest_after_set, set_order } = set;
+    const { id_user, id_set, id_exercise, weight, rest_after_set, set_order } = set;
 
     const new_set = await pool.query(
       `
         INSERT INTO "SET" 
-        (id_user, id_exercise,
+        (id_user, id_exercise, id_set,
         weight, rest_after_set, set_order) VALUES 
-        ($1, $2, $3, $4, $5); 
+        ($1, $2, $3, $4, $5, $6); 
         `,
-      [id_user, id_exercise, weight, rest_after_set, set_order]
+      [id_user, id_exercise, id_set, weight, rest_after_set, set_order]
     );
-
     return new_set.rowCount;
   } catch (error) {
     throw new CustomError(
@@ -48,7 +48,7 @@ async function find_sets_by_id_user_id_exercise(id_user, id_exercise) {
   try {
     const found_sets = await pool.query(
       `
-      SELECT s.*, t.time, r.repetition
+      SELECT s.id_set, s.weight, s.rest_after_set, s.set_order, t.time, r.repetition
       FROM "SET" AS s
       LEFT JOIN TIMESET AS t ON s.id_user = t.id_user 
       AND s.id_exercise = t.id_exercise 
@@ -58,10 +58,37 @@ async function find_sets_by_id_user_id_exercise(id_user, id_exercise) {
       AND s.id_set = r.id_set
       WHERE s.id_user = $1 AND s.id_exercise = $2
       ORDER BY s.set_order ASC
-        `,
+      `,
       [id_user, id_exercise]
     );
     return found_sets.rows;
+  } catch (error) {
+    throw new CustomError(
+      `Something went wrong with database. Error: ${error.message}`,
+      500
+    );
+  }
+}
+
+/**
+ * Finds set by id_user, id_exercise and id_set
+ * @param {number} id_user - User's id. It must be a integer and be store in database
+ * @param {number} id_exercise- Exercise's id. It must be a integer and be store in database
+ * @param {number} id_set - Set's id. It must be a integer and be store in database
+ * @returns {Promise<Object>} - A promise of the found set
+ * @throws {CustomError} - If something goes wrong with the database
+ */
+async function find_set_by_id_user_id_exercise_id_set(id_user, id_exercise, id_set) {
+  try {
+    const found_set = await pool.query(
+      `
+      SELECT s.*
+      FROM "SET" AS s
+      WHERE s.id_user = $1 AND s.id_exercise = $2 AND s.id_set = $3
+        `,
+      [id_user, id_exercise, id_set]
+    );
+    return found_set.rows;
   } catch (error) {
     throw new CustomError(
       `Something went wrong with database. Error: ${error.message}`,
@@ -186,11 +213,38 @@ async function delete_sets_by_id_user(
   }
 }
 
+/**
+ * Finds the id_set of the last set created
+ * @param {number} id_user - User's id. It must be a integer and be store in database
+ * @param {number} id_exercise- Exercise's id. It must be a integer and be store in database
+ * @returns {Promise<Object>} - A promise of the id_set
+ * @throws {CustomError} - If something goes wrong with the database
+ */
+async function find_id_set_of_last_set_created_by_id_user_id_exercise(id_user, id_exercise) {
+  try {
+    const found_id_set = await pool.query(
+      `
+      SELECT MAX(s.id_set)
+      FROM "SET" AS s
+      WHERE s.id_user = $1 AND s.id_exercise = $2
+      `,
+      [id_user, id_exercise]
+    );
+    return found_id_set.rows;
+  } catch (error) {
+    throw new CustomError(
+      `Something went wrong with database. Error: ${error.message}`,
+      500
+    );
+  }
+}
 module.exports = {
   create_new_set,//✓ //✓
   delete_set_by_id_user_id_exercise_id_set,//✓ //✓
   delete_sets_by_id_user,//✓ //✓
   delete_sets_by_id_user_id_exercise,//✓ //✓
   find_sets_by_id_user_id_exercise,//✓ //✓
-  update_set//✓ //✓
+  update_set,//✓ //✓
+  find_id_set_of_last_set_created_by_id_user_id_exercise,
+  find_set_by_id_user_id_exercise_id_set
 };

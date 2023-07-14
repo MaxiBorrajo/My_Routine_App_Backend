@@ -36,6 +36,34 @@ async function create_new_composed_by(composed_by) {
 }
 
 /**
+ * Finds a specific composed_by entity by id_user, id_routine and id_exercise
+ * @param {number} id_user - User's id. It must be a integer and be store in database
+ * @param {number} id_routine - Routine's id. It must be a integer and be store in database
+ * @param {number} id_exercise- Exercise's id. It must be a integer and be store in database
+ * @returns {Promise<Object>} - A promise of the found composed_by entity
+ * @throws {CustomError} - If something goes wrong with the database
+ */
+async function find_composed_by_by_id_user_id_routine_id_exercise(id_user, id_routine, id_exercise){
+  try {
+    const found_composed_by = await pool.query(
+      `
+        SELECT DISTINCT c.id_exercise, c.id_routine, c.exercise_order 
+        FROM COMPOSEDBY AS c
+        WHERE c.id_user = $1 AND c.id_exercise = $2 AND c.id_routine = $3 ; 
+        `,
+      [id_user, id_exercise, id_routine]
+    );
+
+    return found_composed_by.rows
+  } catch (error) {
+    throw new CustomError(
+      `Something went wrong with database. Error: ${error.message}`,
+      500
+    );
+  }
+} 
+
+/**
  * Updates composed_by
  * @param {Object} composed_by - Object that contains composed_by entity information of a user. 
  * It must contain:
@@ -173,6 +201,7 @@ async function delete_composed_by_by_id_user(id_user) {
 
 module.exports = {
   create_new_composed_by, //✓ //✓
+  find_composed_by_by_id_user_id_routine_id_exercise,
   delete_composed_by_by_id_user, //✓ //✓
   delete_composed_by_by_id_user_id_routine_id_exercise, //✓ //✓
   update_composed_by, //✓ //✓

@@ -7,7 +7,7 @@ const CustomError = require("../utils/custom_error");
  * routine.id_user {number} - User's id. Must be stored in database and be an integer
  * routine.routine_name  {string} - Name of the routine
  * routine.description {string} - Description of the routine
- * routine.time_before_start {string} - Time before start a routine 
+ * routine.time_before_start {string} - Time before start a routine
  * ('5 seconds', '10 minutes', '10 minutes 5 seconds')
  * @returns {Promise<Object>} - A promise of the created routine
  * @throws {CustomError} - If something goes wrong with the database
@@ -44,7 +44,7 @@ async function create_new_routine(routine) {
 async function find_routines_by_id_user(id_user, sort_by, order) {
   try {
     let query = `
-      SELECT r.id_routine, r.routine_name,
+      SELECT DISTINCT r.id_routine, r.routine_name,
       r.created_at, r.usage_routine, r.time_before_start,
       r.description, r.is_favorite FROM "ROUTINE" AS r
       WHERE r.id_user = $1
@@ -73,7 +73,7 @@ async function find_routine_by_id_user_id_routine(id_user, id_routine) {
   try {
     const found_routine = await pool.query(
       `
-      SELECT r.id_routine, r.routine_name,
+      SELECT DISTINCT r.id_routine, r.routine_name,
       r.created_at, r.usage_routine, r.time_before_start,
       r.description, r.is_favorite FROM "ROUTINE" AS r
       WHERE r.id_user = $1 AND r.id_routine = $2
@@ -97,7 +97,7 @@ async function find_routine_by_id_user_id_routine(id_user, id_routine) {
  * routine.routine_name  {string} - Name of the routine
  * routine.description {string} - Description of the routine
  * routine.is_favorite {boolean} - If a routine is favorite or not
- * routine.time_before_start {string} - Time before start a routine 
+ * routine.time_before_start {string} - Time before start a routine
  * routine.usage_routine {string} - How many time this routine was used
  * ('5 seconds', '10 minutes', '10 minutes 5 seconds')
  * @returns {Promise<Object>} - A promise of the updated routine
@@ -112,7 +112,7 @@ async function update_routine(routine) {
       description,
       is_favorite,
       time_before_start,
-      usage_routine
+      usage_routine,
     } = routine;
 
     const updated_routine = await pool.query(
@@ -125,7 +125,15 @@ async function update_routine(routine) {
     usage_routine = $7
     WHERE id_user = $1 AND id_routine = $2
     `,
-      [id_user, id_routine, routine_name, description, is_favorite, time_before_start, usage_routine]
+      [
+        id_user,
+        id_routine,
+        routine_name,
+        description,
+        is_favorite,
+        time_before_start,
+        usage_routine,
+      ]
     );
     return updated_routine.rowCount;
   } catch (error) {
@@ -192,11 +200,16 @@ async function delete_routine_by_id_user_id_routine(id_user, id_routine) {
  * @returns {Promise<Object>} - A promise of the found routine
  * @throws {CustomError} - If something goes wrong with the database
  */
-async function find_routines_of_exercise_by_id_user_idExercise(id_user, idExercise) {
+async function find_routines_of_exercise_by_id_user_idExercise(
+  id_user,
+  idExercise
+) {
   try {
     const found_routines = await pool.query(
       `
-      SELECT r.* FROM "ROUTINE" AS r
+      SELECT DISTINCT r.id_routine, r.routine_name,
+      r.created_at, r.usage_routine, r.time_before_start,
+      r.description, r.is_favorite FROM "ROUTINE" AS r
       JOIN COMPOSEDBY AS c ON r.id_user = c.id_user AND r.id_routine = c.id_routine
       WHERE r.id_user = $1 AND c.id_exercise = $2
       `,
@@ -211,14 +224,96 @@ async function find_routines_of_exercise_by_id_user_idExercise(id_user, idExerci
   }
 }
 
+/**
+ * Finds routines by id_user and if is favorite or not. It can be ordered
+ * @param {number} id_user - User's id. It must be a integer and be store in database
+ * @param {boolean} is_favorite - true if the exercise if a favorite one, false otherwise
+ * @param {string} sort_by - Attribute of an exercise by which to order the results
+ * @param {string} order - ASC (ascending) or DESC (descending)
+ * @returns {Promise<Object>} - A promise of the found routines
+ * @throws {CustomError} - If something goes wrong with the database
+ */
+async function find_routines_by_id_user_isFavorite(
+  id_user,
+  is_favorite,
+  sort_by,
+  order
+) {
+  try {
+    let query = `
+    SELECT DISTINCT r.id_routine, r.routine_name,
+    r.created_at, r.usage_routine, r.time_before_start,
+    r.description, r.is_favorite FROM "ROUTINE" AS r
+    WHERE r.id_user = $1 AND 
+  `;
+    let params = [id_user];
 
+    query += is_favorite ? "is_favorite\n" : "NOT is_favorite\n";
+
+    query += sort_by && order ? `ORDER BY ${sort_by} ${order}` : "";
+
+    const found_routines = await pool.query(query, params);
+
+    return found_routines.rows;
+  } catch (error) {
+    throw new CustomError(
+      `Something went wrong with database. Error: ${error.message}`,
+      500
+    );
+  }
+}
+
+/**
+ * Finds routines by id_user and id_day. It can be ordered
+ * @param {number} id_user - User's id. It must be an integer and be store in database
+ * @param {number[]} days - Array of day's id. They must be an integer
+ * and be store in database
+ * @param {string} sort_by - Attribute of an exercise by which to order the results
+ * @param {string} order - ASC (ascending) or DESC (descending)
+ * @returns {Promise<Object>} - A promise of the found exercises
+ * @throws {CustomError} - If something goes wrong with the database
+ */
+async function find_routines_by_id_user_id_day(id_user, days, sort_by, order) {
+  try {
+    let query = `
+    SELECT DISTINCT r.id_routine, r.routine_name,
+    r.created_at, r.usage_routine, r.time_before_start,
+    r.description, r.is_favorite FROM "ROUTINE" AS r
+    JOIN SCHEDULED AS s ON r.id_user = s.id_user 
+    AND r.id_routine = s.id_routine
+    WHERE r.id_user = $1 AND (
+  `;
+
+    let params = [id_user];
+
+    days.forEach((id_day, index) => {
+      if (index === days.length - 1) {
+        query += `s.id_day = $${index + 2})\n`;
+      } else {
+        query += `s.id_day = $${index + 2} AND\n`;
+      }
+      params.push(id_day);
+    });
+
+    query += sort_by && order ? `ORDER BY ${sort_by} ${order}` : "";
+    const found_routines = await pool.query(query, params);
+    return found_routines.rows;
+  } catch (error) {
+    throw new CustomError(
+      `Something went wrong with database. Error: ${error.message}`,
+      500
+    );
+  }
+}
 
 module.exports = {
-  create_new_routine,//✓ //✓
-  delete_routine_by_id_user_id_routine,//✓ //✓
-  delete_routines_by_id_user,//✓ //✓ 
-  find_routine_by_id_user_id_routine,//✓ //✓
-  find_routines_by_id_user,//✓ //✓
+  create_new_routine, //✓ //✓
+  delete_routine_by_id_user_id_routine, //✓ //✓
+  delete_routines_by_id_user, //✓ //✓
+  find_routine_by_id_user_id_routine, //✓ //✓
+  find_routines_by_id_user, //✓ //✓
+  find_routines_by_id_user_isFavorite,
+  find_routines_by_id_user_id_day,
   find_routines_of_exercise_by_id_user_idExercise, //✓ //✓
-  update_routine//✓ //✓
+  update_routine, //✓ //✓
 };
