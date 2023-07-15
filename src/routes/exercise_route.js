@@ -6,7 +6,8 @@ const {
   find_all_exercises,
   find_exercises_of_routine,
   update_specific_exercise,
-  find_specific_exercise
+  find_specific_exercise,
+  delete_specific_exercise
 } = require("../controllers/exercise_controller");
 const auth_middleware = require("../middlewares/auth_middleware");
 const check_invalid_tokens_middleware = require("../middlewares/invalid_token_middleware");
@@ -111,6 +112,21 @@ router.put(
   check_invalid_tokens_middleware,
   auth_middleware,
   update_specific_exercise
+);
+
+/**
+ * Deletes a specific exercise
+ *
+ * @route {DELETE} /v1/exercise/:id_exercise
+ *
+ * @throws {CustomError} - If the exercise isn't found in database or 
+ * if something goes wrong with the database
+ */
+router.delete(
+  "/:id_exercise",
+  check_invalid_tokens_middleware,
+  auth_middleware,
+  delete_specific_exercise
 );
 
 module.exports = router;

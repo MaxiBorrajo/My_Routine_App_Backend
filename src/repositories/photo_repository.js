@@ -64,6 +64,30 @@ async function find_photos_by_id_user_id_exercise(id_user, id_exercise) {
 }
 
 /**
+ * Finds photos of an user by id_user
+ * @param {number} id_user - User's id. It must be a integer and be store in database
+ * @returns {Promise<Object>} - A promise of the found photos
+ * @throws {CustomError} - If something goes wrong with the database
+ */
+async function find_photos_by_id_user(id_user) {
+  try {
+    const found_photos = await pool.query(
+      `
+    SELECT p.public_id, p.url_photo FROM PHOTOEXERCISE AS p
+    WHERE p.id_user = $1
+    `,
+      [id_user]
+    );
+    return found_photos.rows;
+  } catch (error) {
+    throw new CustomError(
+      `Something went wrong with database. Error: ${error.message}`,
+      500
+    );
+  }
+}
+
+/**
  * Finds a specific photo of an exercise by id_user, id_exercise and public_id
  * @param {number} id_user - User's id. It must be a integer and be store in database
  * @param {number} id_exercise - Exercise's id. It must be a integer and be store in database
@@ -175,5 +199,6 @@ module.exports = {
   find_photos_by_id_user_id_exercise,//✓ //✓
   delete_photos_by_id_user,
   //✓ //✓
-  find_photo_by_id_user_id_exercise_public_id
+  find_photo_by_id_user_id_exercise_public_id,
+  find_photos_by_id_user
 };

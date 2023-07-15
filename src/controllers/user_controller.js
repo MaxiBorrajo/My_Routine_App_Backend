@@ -6,13 +6,37 @@ const {
   update_auth,
 } = require("../repositories/auth_repository");
 const {
+  delete_composed_by_by_id_user,
+} = require("../repositories/composed_by_repository");
+const {
+  delete_exercises_by_id_user,
+} = require("../repositories/exercise_repository");
+const {
+  find_photos_by_id_user,
+  delete_photos_by_id_user,
+} = require("../repositories/photo_repository");
+const {
+  delete_repetition_sets_by_id_user,
+} = require("../repositories/repetition_set_repository");
+const {
+  delete_routines_by_id_user,
+} = require("../repositories/routine_repository");
+const {
+  delete_scheduled_by_id_user,
+} = require("../repositories/scheduled_repository");
+const { delete_sets_by_id_user } = require("../repositories/set_repository");
+const {
+  delete_time_set_by_id_user,
+} = require("../repositories/time_set_repository");
+const { delete_works_by_id_user } = require("../repositories/works_repository");
+const {
   create_new_user,
   delete_user_by_id_user,
   find_user_by_email,
   find_user_by_id_user,
   update_user,
 } = require("../repositories/user_repository");
-const { create_new_feedback } = require("../repositories/feedback_repository");
+const { create_new_feedback, delete_feedback_by_id_user } = require("../repositories/feedback_repository");
 const {
   create_new_invalid_token,
   delete_invalid_tokens_by_id_user,
@@ -316,15 +340,17 @@ async function get_current_user(req, res, next) {
  */
 async function update_current_user(req, res, next) {
   try {
-    if(!req.body){
-      return next(new CustomError("You must update, at least, one attribute", 400));
+    if (!req.body) {
+      return next(
+        new CustomError("You must update, at least, one attribute", 400)
+      );
     }
 
     if (req.body.password) {
       if (req.file) {
         await delete_image_in_cloud(req.file.public_id);
       }
-      return next(new CustomError("You cannot change your password here", 404));//luego agregar link al front
+      return next(new CustomError("You cannot change your password here", 404)); //luego agregar link al front
     }
 
     const found_user = await find_user_by_id_user(req.id_user);
@@ -414,28 +440,32 @@ async function update_current_user(req, res, next) {
  * @throws {CustomError} If something goes wrong with the database
  */
 async function logout(req, res, next) {
-  let new_invalid_token = {
-    id_user: req.id_user,
-    token: req.cookies.access_token,
-  };
+  try {
+    let new_invalid_token = {
+      id_user: req.id_user,
+      token: req.cookies.access_token,
+    };
 
-  await create_new_invalid_token(new_invalid_token);
+    await create_new_invalid_token(new_invalid_token);
 
-  new_invalid_token.token = req.cookies.refresh_token;
+    new_invalid_token.token = req.cookies.refresh_token;
 
-  await create_new_invalid_token(new_invalid_token);
+    await create_new_invalid_token(new_invalid_token);
 
-  res.clearCookie("access_token");
-  res.clearCookie("refresh_token");
-  if(req.user){
-    req.logout();
+    res.clearCookie("access_token");
+    res.clearCookie("refresh_token");
+    if (req.user) {
+      req.logout();
+    }
+    return return_response(
+      res,
+      200,
+      { message: "You have successfully logged out" },
+      true
+    );
+  } catch (error) {
+    next(error);
   }
-  return return_response(
-    res,
-    200,
-    { message: "You have successfully logged out" },
-    true
-  );
 }
 
 /**
@@ -447,20 +477,88 @@ async function logout(req, res, next) {
  * @throws {CustomError} If something goes wrong with the database
  */
 async function send_feedback(req, res, next) {
-  const { comment } = req.body;
+  try {
+    const { comment } = req.body;
 
-  const new_feedback = {
-    id_user: req.id_user,
-    comment: comment,
-  };
+    const new_feedback = {
+      id_user: req.id_user,
+      comment: comment,
+    };
 
-  const created_feedback = await create_new_feedback(new_feedback);
+    const created_feedback = await create_new_feedback(new_feedback);
 
-  if (are_equal(created_feedback.length, 0)) {
-    return next(new CustomError("Something went wrong with the database", 500));
+    if (are_equal(created_feedback.length, 0)) {
+      return next(
+        new CustomError("Something went wrong with the database", 500)
+      );
+    }
+
+    return return_response(res, 201, { message: "Feedback sent" }, true);
+  } catch (error) {
+    next(error);
   }
+}
 
-  return return_response(res, 201, { message: "Feedback sent" }, true);
+/**
+ * Controller that deletes current user account
+ *
+ * @param {Object} req - The request object from the HTTP request.
+ * @param {Object} res - The response object from the HTTP response.
+ * @param {Function} next - The next function in the middleware chain.
+ * @throws {CustomError} If something goes wrong with the database
+ */
+async function delete_user(req, res, next) {
+  try {
+    await delete_time_set_by_id_user(req.id_user);
+    await delete_repetition_sets_by_id_user(req.id_user);
+    await delete_sets_by_id_user(req.id_user);
+    await delete_works_by_id_user(req.id_user);
+
+    const found_photos = await find_photos_by_id_user(req.id_user);
+
+    if (is_greater_than(found_photos.length, 0)) {
+      found_photos.forEach(async (photo) => {
+        await delete_image_in_cloud(photo.public_id);
+      });
+    }
+
+    await delete_photos_by_id_user(req.id_user);
+    await delete_composed_by_by_id_user(req.id_user);
+    await delete_exercises_by_id_user(req.id_user);
+    await delete_scheduled_by_id_user(req.id_user);
+    await delete_routines_by_id_user(req.id_user);
+    await delete_feedback_by_id_user(req.id_user);
+    await delete_invalid_tokens_by_id_user(req.id_user);
+    await delete_auth_by_id_user(req.id_user);
+
+    const current_user = await find_user_by_id_user(req.id_user);
+    await delete_image_in_cloud(current_user[0].public_id_profile_photo);
+
+    const deleted_user = await delete_user_by_id_user(req.id_user);
+    if (are_equal(deleted_user, 0)) {
+      return next(
+        new CustomError(
+          "User could not be deleted completely. Perhaps some associations were lost in the process",
+          500
+        )
+      );
+    }
+
+    res.clearCookie("access_token");
+    res.clearCookie("refresh_token");
+    if (req.user) {
+      req.logout();
+    }
+
+    return return_response(
+      res,
+      200,
+      { message: "User deleted successfully" },
+      true
+    );
+  } catch (error) {
+    next(error);
+  }
 }
 
 module.exports = {
@@ -473,4 +571,5 @@ module.exports = {
   update_current_user,
   logout,
   send_feedback,
+  delete_user,
 };

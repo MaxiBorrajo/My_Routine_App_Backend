@@ -20,6 +20,7 @@ const {
   find_composed_by_by_id_user_id_routine_id_exercise,
   update_composed_by,
   delete_composed_by_by_id_user_id_routine_id_exercise,
+  delete_composed_by_by_id_user_id_routine,
 } = require("../repositories/composed_by_repository");
 
 const {
@@ -88,11 +89,15 @@ async function create_routine(req, res, next) {
  */
 async function find_routines(req, res, next) {
   try {
-
     for (let query in req.query) {
-      if (Array.isArray(req.query[query]) && query !== 'filter_values') {
-        return next(new CustomError("Only one filter and one sort can be applied at a time", 400))
-      } 
+      if (Array.isArray(req.query[query]) && query !== "filter_values") {
+        return next(
+          new CustomError(
+            "Only one filter and one sort can be applied at a time",
+            400
+          )
+        );
+      }
     }
 
     const allowed_sort_by_queries = [
@@ -516,6 +521,62 @@ async function delete_exercise_from_routine(req, res, next) {
   }
 }
 
+/**
+ * Controller that deletes a specific routine
+ *
+ * @param {Object} req - The request object from the HTTP request.
+ * @param {Object} res - The response object from the HTTP response.
+ * @param {Function} next - The next function in the middleware chain.
+ * @throws {CustomError} If the routine isn't found or if something goes wrong with database
+ */
+async function delete_specific_routine(req, res, next) {
+  try {
+    const found_routine = await find_routine_by_id_user_id_routine(
+      req.id_user,
+      req.params.id_routine
+    );
+
+    if (are_equal(found_routine.length, 0)) {
+      next(new CustomError("Routine not found", 404));
+    }
+
+    await delete_scheduled_by_id_user_id_routine(
+      req.id_user,
+      req.params.id_routine
+    );
+
+    await delete_composed_by_by_id_user_id_routine(
+      req.id_user,
+      req.params.id_routine
+    );
+
+    const deleted_routine = await delete_routine_by_id_user_id_routine(
+      req.id_user,
+      req.params.id_routine
+    );
+
+    if (are_equal(deleted_routine, 0)) {
+      next(
+        new CustomError(
+          "Routine could not be deleted completely. Perhaps some associations were lost in the process",
+          500
+        )
+      );
+    }
+
+    return return_response(
+      res,
+      200,
+      {
+        message: "Routine deleted successfully",
+      },
+      true
+    );
+
+  } catch (error) {
+    next(error);
+  }
+}
 module.exports = {
   create_routine,
   find_routines,
@@ -525,4 +586,5 @@ module.exports = {
   find_routines_of_exercise,
   change_order_exercise_in_routine,
   delete_exercise_from_routine,
+  delete_specific_routine,
 };

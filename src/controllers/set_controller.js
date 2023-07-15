@@ -348,7 +348,7 @@ async function update_specific_set(req, res, next) {
 
     return return_response(
       res,
-      201,
+      200,
       { message: "Set updated succesfully" },
       true
     );
@@ -437,7 +437,7 @@ async function delete_specific_exercise(req, res, next) {
 
   return return_response(
     res,
-    201,
+    200,
     { message: "Set deleted succesfully" },
     true
   );

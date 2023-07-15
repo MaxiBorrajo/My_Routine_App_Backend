@@ -11,14 +11,15 @@ const {
   get_current_user,
   update_current_user,
   logout,
-  send_feedback
+  send_feedback,
+  delete_user,
 } = require("../controllers/user_controller");
 const {
   upload_multer,
   process_image,
 } = require("../middlewares/upload_images_middleware");
 const auth_middleware = require("../middlewares/auth_middleware");
-const check_invalid_tokens_middleware = require('../middlewares/invalid_token_middleware')
+const check_invalid_tokens_middleware = require("../middlewares/invalid_token_middleware");
 require("../middlewares/auth_google");
 
 /**
@@ -142,7 +143,12 @@ router.post(
  *
  * @throws {CustomError} - If something goes wrong with the database
  */
-router.get("/", check_invalid_tokens_middleware, auth_middleware, get_current_user);
+router.get(
+  "/",
+  check_invalid_tokens_middleware,
+  auth_middleware,
+  get_current_user
+);
 
 /**
  * Update a current user's information
@@ -192,7 +198,7 @@ router.delete(
 /**
  * Posts feedback about the app
  * @body {String} comment - Comment with which to give feedback
- * 
+ *
  * @route {POST} /v1/user/feedback
  *
  * @throws {CustomError} - If something goes wrong with the database
@@ -201,10 +207,21 @@ router.post(
   "/feedback",
   check_invalid_tokens_middleware,
   auth_middleware,
-  validate_fields_middleware.body_must_contain_attributes([
-    "comment"
-  ]),
+  validate_fields_middleware.body_must_contain_attributes(["comment"]),
   send_feedback
 );
 
+/**
+ * Deletes a specific user
+ *
+ * @route {DELETE} /v1/user/
+ *
+ * @throws {CustomError} - If something goes wrong with the database
+ */
+router.delete(
+  "/",
+  check_invalid_tokens_middleware,
+  auth_middleware,
+  delete_user
+);
 module.exports = router;

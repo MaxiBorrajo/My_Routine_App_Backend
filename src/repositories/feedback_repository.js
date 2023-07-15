@@ -32,4 +32,29 @@ async function create_new_feedback(feedback) {
   }
 }
 
-module.exports = { create_new_feedback };
+/**
+ * Deletes feedbacks by id_user
+ * @param {number} id_user - User's id. Must be stored in database and be an integer
+ * @returns {Promise<Object>} - A promise of the deleted feedbacks
+ * @throws {CustomError} - If something goes wrong with the database
+ */
+async function delete_feedback_by_id_user(id_user) {
+  try {
+
+    const deleted_feedback = await pool.query(
+      `
+      DELETE FROM FEEDBACK AS f
+      WHERE f.id_user = $1
+        `,
+      [id_user]
+    );
+    return deleted_feedback.rowCount;
+  } catch (error) {
+    throw new CustomError(
+      `Something went wrong with database. Error: ${error.message}`,
+      500
+    );
+  }
+}
+
+module.exports = { create_new_feedback, delete_feedback_by_id_user };

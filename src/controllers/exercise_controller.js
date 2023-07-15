@@ -13,6 +13,28 @@ const {
 const {
   find_routine_by_id_user_id_routine,
 } = require("../repositories/routine_repository");
+const {
+  delete_time_set_by_id_user_id_exercise,
+} = require("../repositories/time_set_repository");
+const {
+  delete_repetition_sets_by_id_user_id_exercise,
+} = require("../repositories/repetition_set_repository");
+const {
+  delete_sets_by_id_user_id_exercise,
+} = require("../repositories/set_repository");
+const {
+  delete_works_by_id_user_id_exercise,
+} = require("../repositories/works_repository");
+const {
+  find_photos_by_id_user_id_exercise,
+  delete_photos_by_id_user_id_exercise,
+} = require("../repositories/photo_repository");
+const {
+  delete_composed_by_by_id_user_id_exercise,
+} = require("../repositories/composed_by_repository");
+const {
+  delete_image_in_cloud,
+} = require("../middlewares/upload_images_middleware");
 const CustomError = require("../utils/custom_error");
 const {
   return_response,
@@ -20,6 +42,7 @@ const {
   are_equal,
 } = require("../utils/utils_functions");
 const _ = require("lodash");
+const { find_all_photos_of_exercise } = require("./photo_controller");
 
 /**
  * Controller that creates a new exercise
@@ -66,11 +89,15 @@ async function create_exercise(req, res, next) {
  */
 async function find_all_exercises(req, res, next) {
   try {
-    
     for (let query in req.query) {
-      if (Array.isArray(req.query[query]) && query !== 'filter_values') {
-        return next(new CustomError("Only one filter and one sort can be applied at a time", 400))
-      } 
+      if (Array.isArray(req.query[query]) && query !== "filter_values") {
+        return next(
+          new CustomError(
+            "Only one filter and one sort can be applied at a time",
+            400
+          )
+        );
+      }
     }
 
     const allowed_sort_by_queries = [
@@ -150,7 +177,7 @@ async function find_all_exercises(req, res, next) {
     }
 
     if (req.query.filter && req.query.filter === "intensity") {
-      const filter_values = parseInt(req.query.filter_values)
+      const filter_values = parseInt(req.query.filter_values);
 
       const found_exercises = await find_exercises_by_id_user_intensity(
         req.id_user,
@@ -301,10 +328,97 @@ async function find_specific_exercise(req, res, next) {
   }
 }
 
+/**
+ * Controller that deletes a specific exercise
+ *
+ * @param {Object} req - The request object from the HTTP request.
+ * @param {Object} res - The response object from the HTTP response.
+ * @param {Function} next - The next function in the middleware chain.
+ * @throws {CustomError} If the exercise isn't found or if something goes wrong with database
+ */
+async function delete_specific_exercise(req, res, next) {
+  try {
+    const found_exercise = await find_exercise_by_id_user_id_exercise(
+      req.id_user,
+      req.params.id_exercise
+    );
+
+    if (are_equal(found_exercise.length, 0)) {
+      next(new CustomError("Exercise not found", 404));
+    }
+
+    await delete_time_set_by_id_user_id_exercise(
+      req.id_user,
+      req.params.id_exercise
+    );
+
+    await delete_repetition_sets_by_id_user_id_exercise(
+      req.id_user,
+      req.params.id_exercise
+    );
+
+    await delete_sets_by_id_user_id_exercise(
+      req.id_user,
+      req.params.id_exercise
+    );
+
+    await delete_works_by_id_user_id_exercise(
+      req.id_user,
+      req.params.id_exercise
+    );
+
+    const photos_of_exercise = await find_photos_by_id_user_id_exercise(
+      req.id_user,
+      req.params.id_exercise
+    );
+
+    if (is_greater_than(photos_of_exercise.length, 0)) {
+      photos_of_exercise.forEach(async (photo) => {
+        await delete_image_in_cloud(photo.public_id);
+      });
+    }
+
+    await delete_photos_by_id_user_id_exercise(
+      req.id_user,
+      req.params.id_exercise
+    );
+
+    await delete_composed_by_by_id_user_id_exercise(
+      req.id_user,
+      req.params.id_exercise
+    );
+
+    const deleted_exercise = await delete_exercise_by_id_user_id_exercise(
+      req.id_user,
+      req.params.id_exercise
+    );
+
+    if (are_equal(deleted_exercise, 0)) {
+      next(
+        new CustomError(
+          "Exercise could not be deleted completely. Perhaps some associations were lost in the process",
+          500
+        )
+      );
+    }
+
+    return return_response(
+      res,
+      200,
+      {
+        message: "Exercise deleted successfully",
+      },
+      true
+    );
+  } catch (error) {
+    next(error);
+  }
+}
 module.exports = {
   create_exercise,
   find_all_exercises,
   find_exercises_of_routine,
   find_specific_exercise,
   update_specific_exercise,
+  delete_specific_exercise,
 };

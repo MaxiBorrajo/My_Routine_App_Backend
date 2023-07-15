@@ -9,7 +9,8 @@ const {
   add_exercise_to_routine,
   find_routines_of_exercise,
   change_order_exercise_in_routine,
-  delete_exercise_from_routine
+  delete_exercise_from_routine,
+  delete_specific_routine
 } = require("../controllers/routine_controller");
 const auth_middleware = require("../middlewares/auth_middleware");
 const check_invalid_tokens_middleware = require("../middlewares/invalid_token_middleware");
@@ -162,6 +163,22 @@ router.delete(
   check_invalid_tokens_middleware,
   auth_middleware,
   delete_exercise_from_routine
+);
+
+
+/**
+ * Deletes a specific routine
+ *
+ * @route {DELETE} /v1/routine/:id_routine
+ *
+ * @throws {CustomError} - If the routine isn't found in database or 
+ * if something goes wrong with the database
+ */
+router.delete(
+  "/:id_routine",
+  check_invalid_tokens_middleware,
+  auth_middleware,
+  delete_specific_routine
 );
 
 module.exports = router;
