@@ -1,6 +1,13 @@
+//Imports
+
 const express = require("express");
+
 const router = express.Router();
+
 const validate_fields_middleware = require("../middlewares/validate_fields_middleware");
+
+const { cache_middleware } = require("../middlewares/cache_middleware");
+
 const {
   create_routine,
   find_routines,
@@ -10,10 +17,14 @@ const {
   find_routines_of_exercise,
   change_order_exercise_in_routine,
   delete_exercise_from_routine,
-  delete_specific_routine
+  delete_specific_routine,
 } = require("../controllers/routine_controller");
+
 const auth_middleware = require("../middlewares/auth_middleware");
+
 const check_invalid_tokens_middleware = require("../middlewares/invalid_token_middleware");
+
+//Routes
 
 /**
  * POST route to create a new routine
@@ -40,16 +51,16 @@ router.post(
 );
 
 /**
- * GET route to find all routines of user
+ * GET route to find all routines of a user
  *
  * @route {GET} /v1/routine/
  * @query sort_by (optional) - The attribute by which to order, can be by routine_name, created_at or usage_routine
  * @query order (optional) - In which order to do it, ascending, ASC should be written or descending,
  * DESC should be written
- * @query filter (optional) - The attribute by which to filter, can be by day or is_favorite. 
+ * @query filter (optional) - The attribute by which to filter, can be by day or is_favorite.
  * If you add filter must add filter_values too
  * @query filter_values (optional) - The values by which to filter, if it is by a day
- * you must add an array with the ids of those days or if it is by is_favorite 
+ * you must add an array with the ids of those days or if it is by is_favorite
  * you must put either true or false as value
  * @throws {CustomError} - If the queries bring illegal values or if something goes wrong
  * with the database
@@ -58,6 +69,7 @@ router.get(
   "/",
   check_invalid_tokens_middleware,
   auth_middleware,
+  cache_middleware,
   find_routines
 );
 
@@ -72,12 +84,12 @@ router.get(
   "/:id_routine",
   check_invalid_tokens_middleware,
   auth_middleware,
+  cache_middleware,
   find_specific_routine
 );
 
 /**
- * Updates a specific routine's information
- * Requires authentication
+ * Updates a specific routine
  *
  * @route {PUT} /v1/routine/:id_routine
  *
@@ -109,9 +121,7 @@ router.put(
  */
 router.post(
   "/:id_routine/exercise/:id_exercise",
-  validate_fields_middleware.body_must_contain_attributes([
-    "exercise_order"
-  ]),
+  validate_fields_middleware.body_must_contain_attributes(["exercise_order"]),
   check_invalid_tokens_middleware,
   auth_middleware,
   add_exercise_to_routine
@@ -128,6 +138,7 @@ router.get(
   "/exercise/:id_exercise",
   check_invalid_tokens_middleware,
   auth_middleware,
+  cache_middleware,
   find_routines_of_exercise
 );
 
@@ -142,14 +153,11 @@ router.get(
  */
 router.put(
   "/:id_routine/exercise/:id_exercise",
-  validate_fields_middleware.body_must_contain_attributes([
-    "exercise_order"
-  ]),
+  validate_fields_middleware.body_must_contain_attributes(["exercise_order"]),
   check_invalid_tokens_middleware,
   auth_middleware,
   change_order_exercise_in_routine
 );
-
 
 /**
  * DELETE route to remove an exercise from a routine
@@ -165,13 +173,12 @@ router.delete(
   delete_exercise_from_routine
 );
 
-
 /**
  * Deletes a specific routine
  *
  * @route {DELETE} /v1/routine/:id_routine
  *
- * @throws {CustomError} - If the routine isn't found in database or 
+ * @throws {CustomError} - If the routine isn't found in database or
  * if something goes wrong with the database
  */
 router.delete(
@@ -180,5 +187,7 @@ router.delete(
   auth_middleware,
   delete_specific_routine
 );
+
+//Exports
 
 module.exports = router;

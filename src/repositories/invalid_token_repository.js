@@ -1,5 +1,10 @@
+//Imports
+
 const { pool } = require("../config/db_connection");
+
 const CustomError = require("../utils/custom_error");
+
+//Methods
 
 /**
  * Creates a new invalid token
@@ -8,7 +13,7 @@ const CustomError = require("../utils/custom_error");
  * invalid_token.id_user {number} - User's id. Must be stored in database and be an integer
  * invalid_token.token {string} - The token to invalidate
  * @returns {Promise<Object>} - A promise of the created invalid token object
- * @throws {CustomError} - If something goes wrong with the database
+ * @throws {CustomError} - If something goes wrong with database
  */
 async function create_new_invalid_token(invalid_token) {
   try {
@@ -23,12 +28,10 @@ async function create_new_invalid_token(invalid_token) {
         `,
       [id_user, token]
     );
+
     return new_invalid_token.rowCount;
   } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, error.status);
   }
 }
 
@@ -36,7 +39,7 @@ async function create_new_invalid_token(invalid_token) {
  * Finds an invalid token by token
  * @param {string} token - An invalid token to search
  * @returns {Promise<Object>} - A promise of the found invalid tokens
- * @throws {CustomError} - If something goes wrong with the database
+ * @throws {CustomError} - If something goes wrong with database
  */
 async function find_invalid_tokens_by_token(token) {
   try {
@@ -47,12 +50,10 @@ async function find_invalid_tokens_by_token(token) {
       `,
       [token]
     );
+
     return found_invalid_token.rows;
   } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, error.status);
   }
 }
 
@@ -71,14 +72,14 @@ async function delete_invalid_tokens_by_id_user(id_user) {
     `,
       [id_user]
     );
+
     return deleted_invalid_tokens.rowCount;
   } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, error.status);
   }
 }
+
+//Exports
 
 module.exports = {
   create_new_invalid_token,

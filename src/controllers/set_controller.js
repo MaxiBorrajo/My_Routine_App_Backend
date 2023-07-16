@@ -1,8 +1,8 @@
+//Imports
+
 const {
   create_new_set,
   delete_set_by_id_user_id_exercise_id_set,
-  delete_sets_by_id_user,
-  delete_sets_by_id_user_id_exercise,
   find_sets_by_id_user_id_exercise,
   update_set,
   find_id_set_of_last_set_created_by_id_user_id_exercise,
@@ -12,16 +12,12 @@ const {
 const {
   create_new_repetition_set,
   delete_repetition_set_by_id_user_id_exercise_id_set,
-  delete_repetition_sets_by_id_user,
-  delete_repetition_sets_by_id_user_id_exercise,
   find_repetition_set_by_id_user_id_exercise_id_set,
   update_repetition_set,
 } = require("../repositories/repetition_set_repository");
 
 const {
   create_new_time_set,
-  delete_time_set_by_id_user,
-  delete_time_set_by_id_user_id_exercise,
   delete_time_set_by_id_user_id_exercise_id_set,
   find_time_set_by_id_user_id_exercise_id_set,
   update_time_set,
@@ -39,6 +35,8 @@ const {
   are_equal,
 } = require("../utils/utils_functions");
 
+//Methods
+
 /**
  * Controller that creates a new set associated to an exercise
  *
@@ -54,33 +52,23 @@ async function create_set(req, res, next) {
     const { id_exercise, weight, rest_after_set, set_order, type, quantity } =
       req.body;
 
-    const found_exercise = await find_exercise_by_id_user_id_exercise(
-      req.id_user,
-      id_exercise
-    );
-
-    if (are_equal(found_exercise.length, 0)) {
-      return next(new CustomError("Exercise not found", 404));
-    }
+    await find_exercise_by_id_user_id_exercise(req.id_user, id_exercise);
 
     if (type !== "time" && type !== "repetition") {
-      return next(
-        new CustomError(
-          "The only two types allowed are 'time' and 'repetition'",
-          400
-        )
+      throw new CustomError(
+        "The only two types allowed are 'time' and 'repetition'",
+        400
       );
     }
 
     if (type === "time" && typeof quantity !== "string") {
-      return next(
-        new CustomError("The type time allows values of type string", 400)
-      );
+      throw new CustomError("Type time allows values of type string", 400);
     }
 
     if (type === "repetition" && typeof quantity !== "number") {
-      return next(
-        new CustomError("The type repetition allows values of type number", 400)
+      throw new CustomError(
+        "Type repetition allows values of type number",
+        400
       );
     }
 
@@ -99,11 +87,7 @@ async function create_set(req, res, next) {
       set_order: set_order,
     };
 
-    const created_set = await create_new_set(new_set);
-
-    if (are_equal(created_set, 0)) {
-      return next(new CustomError("The set could not be created", 500));
-    }
+    await create_new_set(new_set);
 
     if (type === "repetition") {
       const new_repetition_set = {
@@ -123,7 +107,8 @@ async function create_set(req, res, next) {
           id_exercise,
           new_set.id_set
         );
-        return next(new CustomError("The set could not be created", 500));
+
+        throw new CustomError("Set could not be created", 500);
       }
     } else {
       const new_time_set = {
@@ -141,14 +126,15 @@ async function create_set(req, res, next) {
           id_exercise,
           new_set.id_set
         );
-        return next(new CustomError("The set could not be created", 500));
+
+        throw new CustomError("Set could not be created", 500);
       }
     }
 
     return return_response(
       res,
       201,
-      { message: "Set created succesfully" },
+      { message: "Set created successfully" },
       true
     );
   } catch (error) {
@@ -162,38 +148,35 @@ async function create_set(req, res, next) {
  * @param {Object} req - The request object from the HTTP request.
  * @param {Object} res - The response object from the HTTP response.
  * @param {Function} next - The next function in the middleware chain.
- * @throws {CustomError} If the exercise isn't found, if the set isn't found
+ * @throws {CustomError} If the exercise isn't found, if there is no
+ * body, if the set isn't found
  * if the types and amounts are expressed wrong,
  * or if something goes wrong while updating the set
  */
 async function update_specific_set(req, res, next) {
   try {
-    const found_exercise = await find_exercise_by_id_user_id_exercise(
+    if (!req.body) {
+      throw new CustomError("You must update, at least, one attribute", 400);
+    }
+
+    await find_exercise_by_id_user_id_exercise(
       req.id_user,
       req.params.id_exercise
     );
-
-    if (are_equal(found_exercise.length, 0)) {
-      return next(new CustomError("Exercise not found", 404));
-    }
 
     if (
       req.body.type &&
       req.body.type !== "time" &&
       req.body.type !== "repetition"
     ) {
-      return next(
-        new CustomError(
-          "The only two types allowed are 'time' and 'repetition'",
-          400
-        )
+      throw new CustomError(
+        "The only two types allowed are 'time' and 'repetition'",
+        400
       );
     }
 
     if (req.body.type && !req.body.quantity) {
-      return next(
-        new CustomError("If type is present you must add a quantity", 400)
-      );
+      throw new CustomError("If type is present you must add a quantity", 400);
     }
 
     if (
@@ -201,9 +184,7 @@ async function update_specific_set(req, res, next) {
       req.body.type === "time" &&
       typeof req.body.quantity !== "string"
     ) {
-      return next(
-        new CustomError("The type time allows values of type string", 400)
-      );
+      throw new CustomError("Type time allows values of type string", 400);
     }
 
     if (
@@ -211,8 +192,9 @@ async function update_specific_set(req, res, next) {
       req.body.type === "repetition" &&
       typeof req.body.quantity !== "number"
     ) {
-      return next(
-        new CustomError("The type repetition allows values of type number", 400)
+      throw new CustomError(
+        "Type repetition allows values of type number",
+        400
       );
     }
 
@@ -221,10 +203,6 @@ async function update_specific_set(req, res, next) {
       req.params.id_exercise,
       req.params.id_set
     );
-
-    if (are_equal(found_set.length, 0)) {
-      return next(new CustomError("Set not found", 404));
-    }
 
     const new_information_set = {
       id_user: req.id_user,
@@ -239,11 +217,7 @@ async function update_specific_set(req, res, next) {
         : found_set[0].set_order,
     };
 
-    const updated_set = await update_set(new_information_set);
-
-    if (are_equal(updated_set, 0)) {
-      return next(new CustomError("The set could not be updated", 500));
-    }
+    await update_set(new_information_set);
 
     if (req.body.type && req.body.type === "time") {
       const found_repetition_set =
@@ -270,9 +244,7 @@ async function update_specific_set(req, res, next) {
         const created_time_set = await create_new_time_set(new_time_set);
 
         if (are_equal(created_time_set, 0)) {
-          return next(
-            new CustomError("The set could not be updated completly", 500)
-          );
+          throw new CustomError("Set could not be updated completely", 500);
         }
       } else {
         const found_time_set =
@@ -287,9 +259,7 @@ async function update_specific_set(req, res, next) {
         const updated_time_set = await update_time_set(found_time_set[0]);
 
         if (are_equal(updated_time_set, 0)) {
-          return next(
-            new CustomError("The set could not be updated completly", 500)
-          );
+          throw new CustomError("Set could not be updated completely", 500);
         }
       }
     }
@@ -320,9 +290,7 @@ async function update_specific_set(req, res, next) {
         );
 
         if (are_equal(created_repetition_set, 0)) {
-          return next(
-            new CustomError("The set could not be updated completly", 500)
-          );
+          throw new CustomError("Set could not be updated completely", 500);
         }
       } else {
         const found_repetition_set =
@@ -339,9 +307,7 @@ async function update_specific_set(req, res, next) {
         );
 
         if (are_equal(updated_repetition_set, 0)) {
-          return next(
-            new CustomError("The set could not be updated completly", 500)
-          );
+          throw new CustomError("Set could not be updated completely", 500);
         }
       }
     }
@@ -349,7 +315,7 @@ async function update_specific_set(req, res, next) {
     return return_response(
       res,
       200,
-      { message: "Set updated succesfully" },
+      { message: "Set updated successfully" },
       true
     );
   } catch (error) {
@@ -367,14 +333,10 @@ async function update_specific_set(req, res, next) {
  * if something goes wrong while updating the set
  */
 async function find_all_sets_of_exercise(req, res, next) {
-  const found_exercise = await find_exercise_by_id_user_id_exercise(
+  await find_exercise_by_id_user_id_exercise(
     req.id_user,
     req.params.id_exercise
   );
-
-  if (are_equal(found_exercise.length, 0)) {
-    return next(new CustomError("Exercise not found", 404));
-  }
 
   const found_sets = await find_sets_by_id_user_id_exercise(
     req.id_user,
@@ -394,24 +356,16 @@ async function find_all_sets_of_exercise(req, res, next) {
  * of if something goes wrong with the database
  */
 async function delete_specific_exercise(req, res, next) {
-  const found_exercise = await find_exercise_by_id_user_id_exercise(
+  await find_exercise_by_id_user_id_exercise(
     req.id_user,
     req.params.id_exercise
   );
 
-  if (are_equal(found_exercise.length, 0)) {
-    return next(new CustomError("Exercise not found", 404));
-  }
-
-  const found_set = await find_set_by_id_user_id_exercise_id_set(
+  await find_set_by_id_user_id_exercise_id_set(
     req.id_user,
     req.params.id_exercise,
     req.params.id_set
   );
-
-  if (are_equal(found_set.length, 0)) {
-    return next(new CustomError("Set not found", 404));
-  }
 
   await delete_repetition_set_by_id_user_id_exercise_id_set(
     req.id_user,
@@ -432,16 +386,18 @@ async function delete_specific_exercise(req, res, next) {
   );
 
   if (are_equal(deleted_set, 0)) {
-    return next(new CustomError("Set could not deleted", 500));
+    throw new CustomError("Set could not be deleted", 500);
   }
 
   return return_response(
     res,
     200,
-    { message: "Set deleted succesfully" },
+    { message: "Set deleted successfully" },
     true
   );
 }
+
+//Exports
 
 module.exports = {
   create_set,

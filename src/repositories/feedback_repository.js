@@ -1,5 +1,12 @@
+//Imports
+
 const { pool } = require("../config/db_connection");
+
 const CustomError = require("../utils/custom_error");
+
+const { are_equal } = require("../utils/utils_functions");
+
+//Methods
 
 /**
  * Creates a new feedback
@@ -8,7 +15,7 @@ const CustomError = require("../utils/custom_error");
  * auth.id_user {number} - User's id. Must be stored in database and be an integer
  * auth.comment {string} - Comment with which to leave feedback
  * @returns {Promise<Object>} - A promise of the created feedback object
- * @throws {CustomError} - If something goes wrong with the database
+ * @throws {CustomError} - If something goes wrong with database
  */
 async function create_new_feedback(feedback) {
   try {
@@ -23,12 +30,14 @@ async function create_new_feedback(feedback) {
         `,
       [id_user, comment]
     );
+
+    if (are_equal(new_feedback.rowCount, 0)) {
+      throw new CustomError("Feedback could not be sent", 500);
+    }
+
     return new_feedback.rowCount;
   } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, error.status);
   }
 }
 
@@ -36,11 +45,10 @@ async function create_new_feedback(feedback) {
  * Deletes feedbacks by id_user
  * @param {number} id_user - User's id. Must be stored in database and be an integer
  * @returns {Promise<Object>} - A promise of the deleted feedbacks
- * @throws {CustomError} - If something goes wrong with the database
+ * @throws {CustomError} - If something goes wrong with database
  */
 async function delete_feedback_by_id_user(id_user) {
   try {
-
     const deleted_feedback = await pool.query(
       `
       DELETE FROM FEEDBACK AS f
@@ -48,13 +56,13 @@ async function delete_feedback_by_id_user(id_user) {
         `,
       [id_user]
     );
+
     return deleted_feedback.rowCount;
   } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, error.status);
   }
 }
+
+//Exports
 
 module.exports = { create_new_feedback, delete_feedback_by_id_user };

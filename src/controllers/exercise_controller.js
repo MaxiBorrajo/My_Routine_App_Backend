@@ -1,7 +1,8 @@
+//Imports
+
 const {
   create_new_exercise,
   delete_exercise_by_id_user_id_exercise,
-  delete_exercises_by_id_user,
   find_exercise_by_id_user_idRoutine,
   find_exercise_by_id_user_id_exercise,
   find_exercises_by_id_user_isFavorite,
@@ -10,39 +11,51 @@ const {
   find_exercises_by_id_user_intensity,
   update_exercise,
 } = require("../repositories/exercise_repository");
+
 const {
   find_routine_by_id_user_id_routine,
 } = require("../repositories/routine_repository");
+
 const {
   delete_time_set_by_id_user_id_exercise,
 } = require("../repositories/time_set_repository");
+
 const {
   delete_repetition_sets_by_id_user_id_exercise,
 } = require("../repositories/repetition_set_repository");
+
 const {
   delete_sets_by_id_user_id_exercise,
 } = require("../repositories/set_repository");
+
 const {
   delete_works_by_id_user_id_exercise,
 } = require("../repositories/works_repository");
+
 const {
   find_photos_by_id_user_id_exercise,
   delete_photos_by_id_user_id_exercise,
 } = require("../repositories/photo_repository");
+
 const {
   delete_composed_by_by_id_user_id_exercise,
 } = require("../repositories/composed_by_repository");
+
 const {
   delete_image_in_cloud,
 } = require("../middlewares/upload_images_middleware");
+
 const CustomError = require("../utils/custom_error");
+
 const {
   return_response,
   is_greater_than,
   are_equal,
 } = require("../utils/utils_functions");
+
 const _ = require("lodash");
-const { find_all_photos_of_exercise } = require("./photo_controller");
+
+//Methods
 
 /**
  * Controller that creates a new exercise
@@ -65,13 +78,7 @@ async function create_exercise(req, res, next) {
       intensity: intensity,
     };
 
-    const created_exercise = await create_new_exercise(new_exercise);
-
-    if (are_equal(created_exercise.length, 0)) {
-      return next(
-        new CustomError("Something went wrong. Exercise not created", 500)
-      );
-    }
+    await create_new_exercise(new_exercise);
 
     return return_response(res, 201, "Exercise created successfully", true);
   } catch (error) {
@@ -85,17 +92,20 @@ async function create_exercise(req, res, next) {
  * @param {Object} req - The request object from the HTTP request.
  * @param {Object} res - The response object from the HTTP response.
  * @param {Function} next - The next function in the middleware chain.
- * @throws {CustomError} If something goes wrong with database
+ * @throws {CustomError} If you try to apply more than one filter and
+ * sort at the same time, if you try to sort, but the order is not made explicit,
+ * if you try to filter, but the filter values are not made explicit,
+ * if you try to sort or filter by an attribute not allowed,
+ * if the order is in an illegal way,
+ * or if something goes wrong with database
  */
 async function find_all_exercises(req, res, next) {
   try {
     for (let query in req.query) {
       if (Array.isArray(req.query[query]) && query !== "filter_values") {
-        return next(
-          new CustomError(
-            "Only one filter and one sort can be applied at a time",
-            400
-          )
+        throw new CustomError(
+          "Only one filter and one sort can be applied at a time",
+          400
         );
       }
     }
@@ -111,11 +121,9 @@ async function find_all_exercises(req, res, next) {
     const allowed_filter_queries = ["intensity", "muscle_group", "is_favorite"];
 
     if (req.query.sort_by && !req.query.order) {
-      return next(
-        new CustomError(
-          "If you add sort_by you must also add the order with which to sort. You add it in the query as order",
-          400
-        )
+      throw new CustomError(
+        "If you add sort_by you must also add the order with which to sort. You add it in the query as order",
+        400
       );
     }
 
@@ -123,20 +131,16 @@ async function find_all_exercises(req, res, next) {
       req.query.sort_by &&
       !allowed_sort_by_queries.includes(req.query.sort_by)
     ) {
-      return next(
-        new CustomError(
-          "The sort_by query only accepts 'exercise_name', 'created_at' or 'intensity' as values",
-          400
-        )
+      throw new CustomError(
+        "The sort_by query only accepts 'exercise_name', 'created_at' or 'intensity' as values",
+        400
       );
     }
 
     if (req.query.order && !allowed_order_queries.includes(req.query.order)) {
-      return next(
-        new CustomError(
-          "The query order only accepts 'ASC' or 'DESC' as values",
-          400
-        )
+      throw new CustomError(
+        "The query order only accepts 'ASC' or 'DESC' as values",
+        400
       );
     }
 
@@ -144,20 +148,16 @@ async function find_all_exercises(req, res, next) {
       req.query.filter &&
       !allowed_filter_queries.includes(req.query.filter)
     ) {
-      return next(
-        new CustomError(
-          "The query filter only accepts 'intensity', 'muscle_group', or 'is_favorite' as values",
-          400
-        )
+      throw new CustomError(
+        "The query filter only accepts 'intensity', 'muscle_group', or 'is_favorite' as values",
+        400
       );
     }
 
     if (req.query.filter && !req.query.filter_values) {
-      return next(
-        new CustomError(
-          "If you add a filter you must also add the values with which to filter. You add them in the query as filter_values",
-          400
-        )
+      throw new CustomError(
+        "If you add a filter you must also add the values with which to filter. You add them in the query as filter_values",
+        400
       );
     }
 
@@ -191,6 +191,7 @@ async function find_all_exercises(req, res, next) {
 
     if (req.query.filter && req.query.filter === "is_favorite") {
       const filter_value = req.query.filter_values === "true";
+
       const found_exercises = await find_exercises_by_id_user_isFavorite(
         req.id_user,
         filter_value,
@@ -224,14 +225,10 @@ async function find_all_exercises(req, res, next) {
  */
 async function find_exercises_of_routine(req, res, next) {
   try {
-    const found_routine = await find_routine_by_id_user_id_routine(
+    await find_routine_by_id_user_id_routine(
       req.id_user,
       req.params.id_routine
     );
-
-    if (are_equal(found_routine.length, 0)) {
-      return next(new CustomError("Routine not found", 404));
-    }
 
     const found_routines = await find_exercise_by_id_user_idRoutine(
       req.id_user,
@@ -250,24 +247,20 @@ async function find_exercises_of_routine(req, res, next) {
  * @param {Object} req - The request object from the HTTP request.
  * @param {Object} res - The response object from the HTTP response.
  * @param {Function} next - The next function in the middleware chain.
- * @throws {CustomError} If the exercise isn't found or if something goes wrong with database
+ * @throws {CustomError} If the exercise isn't found,
+ * if no attribute is included in the body,
+ * or if something goes wrong with database
  */
 async function update_specific_exercise(req, res, next) {
   try {
     if (!req.body) {
-      return next(
-        new CustomError("You must update, at least, one attribute", 400)
-      );
+      throw new CustomError("You must update, at least, one attribute", 400);
     }
 
     const found_exercise = await find_exercise_by_id_user_id_exercise(
       req.id_user,
       req.params.id_exercise
     );
-
-    if (are_equal(found_exercise.length, 0)) {
-      return next(new CustomError("Exercise not found", 404));
-    }
 
     const new_exercise_information = {
       id_user: req.id_user,
@@ -289,15 +282,14 @@ async function update_specific_exercise(req, res, next) {
         : found_exercise[0].intensity,
     };
 
-    const updated_exercise = await update_exercise(new_exercise_information);
+    await update_exercise(new_exercise_information);
 
-    if (are_equal(updated_exercise, 0)) {
-      return next(new CustomError("Routine not updated", 500));
-    }
-
-    delete new_exercise_information.id_user;
-
-    return return_response(res, 200, new_exercise_information, true);
+    return return_response(
+      res,
+      200,
+      { message: "Exercise updated successfully" },
+      true
+    );
   } catch (error) {
     next(error);
   }
@@ -318,10 +310,6 @@ async function find_specific_exercise(req, res, next) {
       req.params.id_exercise
     );
 
-    if (are_equal(found_exercise.length, 0)) {
-      next(new CustomError("Exercise not found", 404));
-    }
-
     return return_response(res, 200, found_exercise[0], true);
   } catch (error) {
     next(error);
@@ -338,14 +326,10 @@ async function find_specific_exercise(req, res, next) {
  */
 async function delete_specific_exercise(req, res, next) {
   try {
-    const found_exercise = await find_exercise_by_id_user_id_exercise(
+    await find_exercise_by_id_user_id_exercise(
       req.id_user,
       req.params.id_exercise
     );
-
-    if (are_equal(found_exercise.length, 0)) {
-      next(new CustomError("Exercise not found", 404));
-    }
 
     await delete_time_set_by_id_user_id_exercise(
       req.id_user,
@@ -388,19 +372,10 @@ async function delete_specific_exercise(req, res, next) {
       req.params.id_exercise
     );
 
-    const deleted_exercise = await delete_exercise_by_id_user_id_exercise(
+    await delete_exercise_by_id_user_id_exercise(
       req.id_user,
       req.params.id_exercise
     );
-
-    if (are_equal(deleted_exercise, 0)) {
-      next(
-        new CustomError(
-          "Exercise could not be deleted completely. Perhaps some associations were lost in the process",
-          500
-        )
-      );
-    }
 
     return return_response(
       res,
@@ -414,6 +389,9 @@ async function delete_specific_exercise(req, res, next) {
     next(error);
   }
 }
+
+//Exports
+
 module.exports = {
   create_exercise,
   find_all_exercises,

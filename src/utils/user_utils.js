@@ -1,12 +1,20 @@
+//Imports
+
 const bcrypt = require("bcrypt");
+
 const jwt = require("jsonwebtoken");
+
 const {
   create_new_auth,
   update_auth,
   find_auth_by_id_user,
 } = require("../repositories/auth_repository");
+
 const { return_response, are_equal } = require("../utils/utils_functions");
+
 const CustomError = require("../utils/custom_error");
+
+//Methods
 
 /**
  * Function that encrypts a given password
@@ -15,7 +23,9 @@ const CustomError = require("../utils/custom_error");
  */
 async function encrypt_password(password) {
   const salt = await bcrypt.genSalt(10);
+
   const encrypted_password = await bcrypt.hash(password, salt);
+
   return encrypted_password;
 }
 
@@ -78,9 +88,10 @@ function get_reset_password_token(id_user) {
     throw error;
   }
 }
+
 /**
  * Function that manages the authorization of a user and returns in cookies
- * an access token, refresh token and in a response the information of the user.
+ * an access token, refresh token and in a response the information of the user
  * @param {Object} user - Information of the user to give authorization
  * @param {Object} res - The response object from the HTTP response
  * @param {Function} next - The next function in the middleware chain
@@ -89,56 +100,59 @@ function get_reset_password_token(id_user) {
  * cannot be sent
  */
 async function get_authorization(user, res, next) {
-  const { access_token, refresh_token } = generate_tokens({
-    id_user: user.id_user,
-  });
-
-  let found_auth = await find_auth_by_id_user(user.id_user);
-
-  if (are_equal(found_auth.length, 0)) {
-    const new_auth = {
+  try {
+    const { access_token, refresh_token } = generate_tokens({
       id_user: user.id_user,
-      reset_password_token: "",
-      reset_password_token_expiration: new Date(Date.now()).toISOString(),
-      refresh_token: refresh_token,
-    };
+    });
 
-    const created_auth = await create_new_auth(new_auth);
+    let found_auth = await find_auth_by_id_user(user.id_user);
 
-    if (!are_equal(created_auth, 1)) {
-      return next(
-        new CustomError("Something went wrong. Authentication not created", 500)
-      );
+    if (are_equal(found_auth.length, 0)) {
+      const new_auth = {
+        id_user: user.id_user,
+        reset_password_token: "",
+        reset_password_token_expiration: new Date(Date.now()).toISOString(),
+        refresh_token: refresh_token,
+      };
+
+      const created_auth = await create_new_auth(new_auth);
+
+      if (!are_equal(created_auth, 1)) {
+        throw new CustomError("Authentication could not be created", 500);
+      }
+    } else {
+      found_auth[0].refresh_token = refresh_token;
+
+      const updated_auth = await update_auth(found_auth[0]);
+
+      if (!are_equal(updated_auth, 1)) {
+        throw new CustomError("Authentication could not be created", 500);
+      }
     }
-  } else {
-    found_auth[0].refresh_token = refresh_token;
 
-    const updated_auth = await update_auth(found_auth[0]);
+    res.cookie("access_token", access_token, {
+      maxAge: 120 * 1000,
+      httpOnly: true,
+      secure: true,
+    });
 
-    if (!are_equal(updated_auth, 1)) {
-      return next(
-        new CustomError("Something went wrong. Authentication not created", 500)
-      );
-    }
+    res.cookie("refresh_token", refresh_token, {
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      secure: true,
+    });
+
+    delete user.password;
+
+    delete user.id_user;
+
+    return_response(res, 201, user, true);
+  } catch (error) {
+    next(error);
   }
-
-  res.cookie("access_token", access_token, {
-    maxAge: 120 * 1000,
-    httpOnly: true,
-    secure: true,
-  });
-
-  res.cookie("refresh_token", refresh_token, {
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    httpOnly: true,
-    secure: true,
-  });
-  
-  delete user.password;
-  delete user.id_user;
-
-  return_response(res, 201, user, true);
 }
+
+//Exports
 
 module.exports = {
   encrypt_password,

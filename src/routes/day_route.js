@@ -1,14 +1,25 @@
+//Imports
+
 const express = require("express");
+
 const router = express.Router();
+
 const validate_fields_middleware = require("../middlewares/validate_fields_middleware");
+
+const { cache_middleware } = require("../middlewares/cache_middleware");
+
 const {
   find_all_days,
   assign_day_to_routine,
   find_days_assign_to_a_routine,
-  remove_day_assigned_to_routine
+  remove_day_assigned_to_routine,
 } = require("../controllers/day_controller");
+
 const auth_middleware = require("../middlewares/auth_middleware");
+
 const check_invalid_tokens_middleware = require("../middlewares/invalid_token_middleware");
+
+//Routes
 
 /**
  * GET route to find all days available
@@ -21,6 +32,7 @@ router.get(
   "/",
   check_invalid_tokens_middleware,
   auth_middleware,
+  cache_middleware,
   find_all_days
 );
 
@@ -56,6 +68,7 @@ router.get(
   "/routine/:id_routine",
   check_invalid_tokens_middleware,
   auth_middleware,
+  cache_middleware,
   find_days_assign_to_a_routine
 );
 
@@ -73,5 +86,7 @@ router.delete(
   auth_middleware,
   remove_day_assigned_to_routine
 );
+
+//Exports
 
 module.exports = router;

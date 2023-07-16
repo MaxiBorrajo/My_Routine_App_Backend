@@ -1,5 +1,10 @@
+//Imports
+
 const { pool } = require("../config/db_connection");
+
 const CustomError = require("../utils/custom_error");
+
+//Methods
 
 /**
  * Creates a new auth entity
@@ -9,13 +14,17 @@ const CustomError = require("../utils/custom_error");
  * auth.verification_expiration {date} - A expiration for the verification code
  * auth.refresh_token {string} - User's refresh token used in authentication
  * @returns {Promise<Object>} - A promise of the created auth object
- * @throws {CustomError} - If something goes wrong with the database
+ * @throws {CustomError} - If something goes wrong with database
  */
 async function create_new_auth(auth) {
   try {
-    const { id_user, reset_password_token, reset_password_token_expiration, refresh_token } =
-      auth;
-      
+    const {
+      id_user,
+      reset_password_token,
+      reset_password_token_expiration,
+      refresh_token,
+    } = auth;
+
     const new_auth = await pool.query(
       `
         INSERT INTO AUTH
@@ -23,14 +32,17 @@ async function create_new_auth(auth) {
         VALUES 
         ($1, $2, $3, $4); 
         `,
-      [id_user, reset_password_token, reset_password_token_expiration, refresh_token]
+      [
+        id_user,
+        reset_password_token,
+        reset_password_token_expiration,
+        refresh_token,
+      ]
     );
+
     return new_auth.rowCount;
   } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, error.status);
   }
 }
 
@@ -38,7 +50,7 @@ async function create_new_auth(auth) {
  * Finds an auth entity by an id_user
  * @param {number} id_user - User's id. It must be a integer and be store in database
  * @returns {Promise<Object>} - A promise of the found auth entity
- * @throws {CustomError} - If something goes wrong with the database
+ * @throws {CustomError} - If something goes wrong with database
  */
 async function find_auth_by_id_user(id_user) {
   try {
@@ -49,12 +61,10 @@ async function find_auth_by_id_user(id_user) {
     `,
       [id_user]
     );
+
     return found_auth.rows;
   } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, error.status);
   }
 }
 
@@ -65,13 +75,17 @@ async function find_auth_by_id_user(id_user) {
  * auth.reset_password_token {string} - A token used in changing a user's password
  * auth.reset_password_token_expiration {date} - A expiration for the reset password token
  * auth.refresh_token {string} - User's refresh token used in authentication
- * @returns {Promise<Object>} - A promise of the updated auth object.
- * @throws {CustomError} - If something goes wrong with the database
+ * @returns {Promise<Object>} - A promise of the updated auth object
+ * @throws {CustomError} - If something goes wrong with database
  */
 async function update_auth(auth) {
   try {
-    const { id_user, reset_password_token, reset_password_token_expiration, refresh_token } =
-      auth;
+    const {
+      id_user,
+      reset_password_token,
+      reset_password_token_expiration,
+      refresh_token,
+    } = auth;
 
     const updated_auth = await pool.query(
       `
@@ -81,15 +95,17 @@ async function update_auth(auth) {
     refresh_token = $4
     WHERE id_user = $1
     `,
-      [id_user, reset_password_token, reset_password_token_expiration, refresh_token]
+      [
+        id_user,
+        reset_password_token,
+        reset_password_token_expiration,
+        refresh_token,
+      ]
     );
 
     return updated_auth.rowCount;
   } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, error.status);
   }
 }
 
@@ -97,7 +113,7 @@ async function update_auth(auth) {
  * Deletes an auth entity by id_user
  * @param {number} id_user - User's id. It must be a integer and be store in database
  * @returns {Promise<Object>} - A promise of the deleted auth entity
- * @throws {CustomError} - If something goes wrong with the database
+ * @throws {CustomError} - If something goes wrong with database
  */
 async function delete_auth_by_id_user(id_user) {
   try {
@@ -108,18 +124,18 @@ async function delete_auth_by_id_user(id_user) {
     `,
       [id_user]
     );
+
     return deleted_auth.rowCount;
   } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, error.status);
   }
 }
 
+//Exports
+
 module.exports = {
-  create_new_auth,//✓ //✓
-  delete_auth_by_id_user,//✓ //✓
-  find_auth_by_id_user,//✓ //✓
-  update_auth,//✓ //✓
+  create_new_auth,
+  delete_auth_by_id_user,
+  find_auth_by_id_user,
+  update_auth,
 };

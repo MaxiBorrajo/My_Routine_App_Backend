@@ -1,7 +1,15 @@
+//Imports
+
 const express = require("express");
+
 const router = express.Router();
+
 const validate_fields_middleware = require("../middlewares/validate_fields_middleware");
+
+const { cache_middleware } = require("../middlewares/cache_middleware");
+
 const passport = require("passport");
+
 const {
   register,
   google_authentication,
@@ -14,13 +22,19 @@ const {
   send_feedback,
   delete_user,
 } = require("../controllers/user_controller");
+
 const {
   upload_multer,
   process_image,
 } = require("../middlewares/upload_images_middleware");
+
 const auth_middleware = require("../middlewares/auth_middleware");
+
 const check_invalid_tokens_middleware = require("../middlewares/invalid_token_middleware");
+
 require("../middlewares/auth_google");
+
+//Routes
 
 /**
  * Post an email, name, last name and password to register. Then, if everithing goes well, it
@@ -74,7 +88,7 @@ router.post(
 
 /**
  * GET route to initiate google's authentication
- * Redirect a user to google's login page to authoriza app to use user's information
+ * Redirect a user to google's login page to authorize app to use user's information
  * @route GET /v1/user/google
  * @returns {void}
  */
@@ -98,6 +112,7 @@ router.get(
 router.get(
   "/google/redirect",
   passport.authenticate("google"),
+  cache_middleware,
   google_authentication
 );
 
@@ -117,9 +132,9 @@ router.post(
 );
 
 /**
- * Update the associated account with the new password encrypted in the reset password token
+ * Update the associated account with a new password
  *
- * @route {POST} /v1/auth/reset_password/:reset_password_token
+ * @route {PUT} /v1/auth/reset_password/:reset_password_token
  *
  * @body {String} password - Is required and must have
  * at least one lowercase letter, one uppercase letter,
@@ -129,7 +144,7 @@ router.post(
  * if the reset password token is expired, if the user isn't found in database, or if something
  * goes wrong while changing the password
  */
-router.post(
+router.put(
   "/reset_password/:reset_password_token",
   validate_fields_middleware.meets_with_password_requirements,
   reset_password
@@ -137,7 +152,6 @@ router.post(
 
 /**
  * GET route to obtain information of the current user
- * Requires authentication
  *
  * @route {GET} /v1/user/
  *
@@ -147,12 +161,12 @@ router.get(
   "/",
   check_invalid_tokens_middleware,
   auth_middleware,
+  cache_middleware,
   get_current_user
 );
 
 /**
  * Update a current user's information
- * Requires authentication
  *
  * @route {PUT} /v1/user/
  *
@@ -177,12 +191,12 @@ router.put(
   auth_middleware,
   upload_multer.single("image"),
   process_image,
+  validate_fields_middleware.body_must_not_contain_attributes(["password"]),
   update_current_user
 );
 
 /**
  * Deletes authorization of the current user
- * Requires authentication
  *
  * @route {DELETE} /v1/user/credentials
  *
@@ -197,6 +211,7 @@ router.delete(
 
 /**
  * Posts feedback about the app
+ *
  * @body {String} comment - Comment with which to give feedback
  *
  * @route {POST} /v1/user/feedback
@@ -224,4 +239,7 @@ router.delete(
   auth_middleware,
   delete_user
 );
+
+//Exports
+
 module.exports = router;

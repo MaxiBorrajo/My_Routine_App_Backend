@@ -1,6 +1,11 @@
+//Imports
+
 const pg = require("pg");
 const CustomError = require("../utils/custom_error");
 
+//Variables
+
+//With this you can perform operations on the database
 const pool = new pg.Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
@@ -8,6 +13,8 @@ const pool = new pg.Pool({
   password: process.env.DB_PASSWORD,
   port: process.env.DB_PORT,
 });
+
+//Methods
 
 /**
  * Establish connection with database
@@ -24,6 +31,8 @@ async function db_connection() {
     );
   }
 }
+
+//Exports
 
 module.exports = {
   db_connection,

@@ -1,7 +1,10 @@
+//Imports
+
 const CustomError = require("./custom_error");
-//  const fs = require('fs');
 
 const sgMail = require("@sendgrid/mail");
+
+//Methods
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
@@ -19,7 +22,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
  */
 function send_email(options) {
   const msg = {
-    to: options.to, 
+    to: options.to,
     from: process.env.EMAIL_FROM,
     subject: options.subject,
     text: options.text,
@@ -29,13 +32,13 @@ function send_email(options) {
   sgMail
     .send(msg)
     .then(() => {
-      console.log('Email sent');
+      console.log("Email sent");
     })
     .catch((error) => {
-      console.error(
-        new CustomError(`Failed to send email: ${error}`, 500)
-      );
+      console.error(new CustomError(`Failed to send email: ${error}`, 500));
     });
 }
+
+//Exports
 
 module.exports = send_email;

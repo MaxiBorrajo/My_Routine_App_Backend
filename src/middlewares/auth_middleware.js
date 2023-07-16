@@ -1,15 +1,25 @@
+//Imports
+
 const {
   find_auth_by_id_user,
   update_auth,
 } = require("../repositories/auth_repository");
+
 const { find_user_by_id_user } = require("../repositories/user_repository");
+
 const {
   create_new_invalid_token,
 } = require("../repositories/invalid_token_repository");
+
 const CustomError = require("../utils/custom_error");
+
 const { generate_tokens } = require("../utils/user_utils");
+
 const { are_equal, is_greater_than } = require("../utils/utils_functions");
+
 const jwt = require("jsonwebtoken");
+
+//Methods
 
 /**
  * Middleware that manage authentication and authorization
@@ -20,12 +30,12 @@ const jwt = require("jsonwebtoken");
  * @throws {CustomError} If there is no refresh token or it's expired,
  * if the access or refresh token are invalid, or if something
  * goes wrong with the database
- * 
+ *
  */
 async function auth_middleware(req, res, next) {
   try {
     if (!req.cookies.refresh_token) {
-      return next(new CustomError("Invalid authorization", 401));
+      throw new CustomError("Invalid authorization", 401);
     }
 
     if (!req.cookies.access_token) {
@@ -44,8 +54,9 @@ async function auth_middleware(req, res, next) {
       const refresh_token_expiration = payload.exp;
 
       if (is_greater_than(refresh_token_expiration, Date.now())) {
-        return next(
-          new CustomError("Your session has expired. Try to login again", 401)
+        throw new CustomError(
+          "Your session has expired. Try to login again",
+          401
         );
       }
 
@@ -59,7 +70,7 @@ async function auth_middleware(req, res, next) {
         are_equal(found_auth[0].refresh_token, req.cookies.refresh_token);
 
       if (!is_allowed_to_continue) {
-        return next(new CustomError("Invalid authorization", 401));
+        throw new CustomError("Invalid authorization", 401);
       }
 
       const { access_token, refresh_token } = generate_tokens({
@@ -71,11 +82,9 @@ async function auth_middleware(req, res, next) {
       const updated_auth = await update_auth(found_auth[0]);
 
       if (!are_equal(updated_auth, 1)) {
-        return next(
-          new CustomError(
-            "Something went wrong. Authentication not created",
-            500
-          )
+        throw new CustomError(
+          "Something went wrong. Authentication not created",
+          500
         );
       }
 
@@ -111,23 +120,26 @@ async function auth_middleware(req, res, next) {
 
       await create_new_invalid_token(new_invalid_token);
 
-      return next(
-        new CustomError("Your session has expired. Try to login again", 401)
+      throw new CustomError(
+        "Your session has expired. Try to login again",
+        401
       );
     }
 
     const found_user = await find_user_by_id_user(payload.id_user);
 
     if (are_equal(found_user.length, 0)) {
-      return next(new CustomError("Invalid authorization", 401));
+      throw new CustomError("Invalid authorization", 401);
     }
 
     req.id_user = payload.id_user;
-    
+
     return next();
   } catch (error) {
-    return next(error);
+    next(error);
   }
 }
+
+//Exports
 
 module.exports = auth_middleware;

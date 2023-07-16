@@ -1,34 +1,44 @@
-//imports
+//Imports
+
 const {
-  create_new_auth,
   delete_auth_by_id_user,
   find_auth_by_id_user,
   update_auth,
 } = require("../repositories/auth_repository");
+
 const {
   delete_composed_by_by_id_user,
 } = require("../repositories/composed_by_repository");
+
 const {
   delete_exercises_by_id_user,
 } = require("../repositories/exercise_repository");
+
 const {
   find_photos_by_id_user,
   delete_photos_by_id_user,
 } = require("../repositories/photo_repository");
+
 const {
   delete_repetition_sets_by_id_user,
 } = require("../repositories/repetition_set_repository");
+
 const {
   delete_routines_by_id_user,
 } = require("../repositories/routine_repository");
+
 const {
   delete_scheduled_by_id_user,
 } = require("../repositories/scheduled_repository");
+
 const { delete_sets_by_id_user } = require("../repositories/set_repository");
+
 const {
   delete_time_set_by_id_user,
 } = require("../repositories/time_set_repository");
+
 const { delete_works_by_id_user } = require("../repositories/works_repository");
+
 const {
   create_new_user,
   delete_user_by_id_user,
@@ -36,39 +46,50 @@ const {
   find_user_by_id_user,
   update_user,
 } = require("../repositories/user_repository");
-const { create_new_feedback, delete_feedback_by_id_user } = require("../repositories/feedback_repository");
+
+const {
+  create_new_feedback,
+  delete_feedback_by_id_user,
+} = require("../repositories/feedback_repository");
+
 const {
   create_new_invalid_token,
   delete_invalid_tokens_by_id_user,
 } = require("../repositories/invalid_token_repository");
+
 const {
   delete_image_in_cloud,
 } = require("../middlewares/upload_images_middleware");
+
 const CustomError = require("../utils/custom_error");
+
 const send_email = require("../utils/send_email");
+
 const {
   encrypt_password,
   match_passwords,
-  generate_tokens,
   get_reset_password_token,
   get_authorization,
 } = require("../utils/user_utils");
+
 const {
   return_response,
   is_greater_than,
   are_equal,
 } = require("../utils/utils_functions");
+
 const jwt = require("jsonwebtoken");
 
-//functions
+//Methods
+
 /**
- * Controller that register a new user into database
+ * Controller that register a new user
  *
  * @param {Object} req - The request object from the HTTP request.
  * @param {Object} res - The response object from the HTTP response.
  * @param {Function} next - The next function in the middleware chain.
  * @throws {CustomError} If a user with the same email is found in database,
- * if something fails while creating the user or if something fails while creating
+ * if something fails while creating the user, or if something fails while creating
  * the authentication
  */
 async function register(req, res, next) {
@@ -78,7 +99,7 @@ async function register(req, res, next) {
     const user = await find_user_by_email(email);
 
     if (is_greater_than(user.length, 0)) {
-      return next(new CustomError("User already exists", 400));
+      throw new CustomError("User already exists", 400);
     }
 
     const new_user = {
@@ -88,13 +109,7 @@ async function register(req, res, next) {
       password: await encrypt_password(password),
     };
 
-    const created_user = await create_new_user(new_user);
-
-    if (!are_equal(created_user, 1)) {
-      return next(
-        new CustomError("Something went wrong. User not created", 500)
-      );
-    }
+    await create_new_user(new_user);
 
     let found_user = await find_user_by_email(email);
 
@@ -103,6 +118,7 @@ async function register(req, res, next) {
     next(error);
   }
 }
+
 /**
  * Controller that allows login
  *
@@ -110,8 +126,8 @@ async function register(req, res, next) {
  * @param {Object} res - The response object from the HTTP response.
  * @param {Function} next - The next function in the middleware chain.
  * @throws {CustomError} If the user isn't found in database,
- * if the password doesn't match the one stored in database or if something
- * goes wrong with the authentication;
+ * if passwords doesn't match, or if something
+ * goes wrong with the authentication
  */
 async function login(req, res, next) {
   try {
@@ -123,7 +139,7 @@ async function login(req, res, next) {
       are_equal(found_user.length, 0) ||
       !(await match_passwords(password, found_user[0].password))
     ) {
-      return next(new CustomError("Email or password are incorrect", 404));
+      throw new CustomError("Email or password are incorrect", 404);
     }
 
     return get_authorization(found_user[0], res, next);
@@ -138,7 +154,7 @@ async function login(req, res, next) {
  * @param {Object} req - The request object from the HTTP request.
  * @param {Object} res - The response object from the HTTP response.
  * @param {Function} next - The next function in the middleware chain.
- * @throws {CustomError} If the user isn't found in database or if authentication
+ * @throws {CustomError} If the user isn't found in database, or if authentication
  * fails in creation or authentication
  */
 async function google_authentication(req, res, next) {
@@ -166,7 +182,7 @@ async function forgot_password(req, res, next) {
     const found_user = await find_user_by_email(email);
 
     if (are_equal(found_user.length, 0)) {
-      return next(new CustomError("User not found", 404));
+      throw new CustomError("User not found", 404);
     }
 
     const found_auth = await find_auth_by_id_user(found_user[0].id_user);
@@ -184,9 +200,7 @@ async function forgot_password(req, res, next) {
     const updated_auth = await update_auth(new_auth);
 
     if (!are_equal(updated_auth, 1)) {
-      return next(
-        new CustomError("Something went wrong. Try again later", 404)
-      );
+      throw new CustomError("Something went wrong. Try again later", 500);
     }
 
     const reset_password_url = `http://localhost:3000/v1/user/reset_password/${reset_password_token}`; //link al front
@@ -214,7 +228,7 @@ async function forgot_password(req, res, next) {
       true
     );
   } catch (error) {
-    return next(error);
+    next(error);
   }
 }
 
@@ -226,18 +240,18 @@ async function forgot_password(req, res, next) {
  * @param {Object} res - The response object from the HTTP response.
  * @param {Function} next - The next function in the middleware chain.
  * @throws {CustomError}  If any the reset password token was provided, if
- * any password was provided, if the verification code is not same as the one
- * stored in database, if it is expired, if the user isn't found in database
+ * any password was provided, if the verification code is invalid,
+ * if it is expired, if the user isn't found
  * or if the authentication associated with the user isn't found
  */
 async function reset_password(req, res, next) {
   try {
     if (!req.params.reset_password_token) {
-      return next(new CustomError("Any verification code was provided", 400));
+      throw new CustomError("Any verification code was provided", 400);
     }
 
     if (!req.body.password) {
-      return next(new CustomError("Any password was provided", 400));
+      throw new CustomError("Any password was provided", 400);
     }
 
     const payload = jwt.verify(
@@ -248,13 +262,13 @@ async function reset_password(req, res, next) {
     let found_user = await find_user_by_id_user(payload.id_user);
 
     if (are_equal(found_user.length, 0)) {
-      return next(new CustomError("User not found", 404));
+      throw new CustomError("User not found", 404);
     }
 
     let found_auth = await find_auth_by_id_user(found_user[0].id_user);
 
     if (are_equal(found_auth.length, 0)) {
-      return next(new CustomError("Authentication not found", 404));
+      throw new CustomError("Authentication not found", 404);
     }
 
     if (
@@ -263,7 +277,7 @@ async function reset_password(req, res, next) {
         found_auth[0].reset_password_token
       )
     ) {
-      return next(new CustomError("Invalid authorization", 401));
+      throw new CustomError("Invalid authorization", 401);
     }
 
     if (
@@ -272,22 +286,23 @@ async function reset_password(req, res, next) {
         found_auth[0].reset_password_token_expiration
       )
     ) {
-      return next(new CustomError("Your verification token has expired", 400));
+      throw new CustomError("Your verification token has expired", 400);
     }
 
     found_user[0].password = await encrypt_password(req.body.password);
+
     found_auth[0].reset_password_token = "";
+
     found_auth[0].reset_password_token_expiration = new Date(
       Date.now()
     ).toISOString();
-    const updated_user = await update_user(found_user[0]);
 
     await update_auth(found_auth[0]);
 
+    const updated_user = await update_user(found_user[0]);
+
     if (!are_equal(updated_user, 1)) {
-      return next(
-        new CustomError("Something went wrong. Try again later", 500)
-      );
+      throw new CustomError("Password could be not changed", 500);
     }
 
     return return_response(
@@ -299,7 +314,7 @@ async function reset_password(req, res, next) {
       true
     );
   } catch (error) {
-    return next(error);
+    next(error);
   }
 }
 
@@ -317,10 +332,11 @@ async function get_current_user(req, res, next) {
     const found_user = await find_user_by_id_user(req.id_user);
 
     if (are_equal(found_user.length, 0)) {
-      return next(new CustomError("User not found", 404));
+      throw new CustomError("User not found", 404);
     }
 
     delete found_user[0].id_user;
+
     delete found_user[0].password;
 
     return return_response(res, 200, found_user[0], true);
@@ -335,31 +351,20 @@ async function get_current_user(req, res, next) {
  * @param {Object} req - The request object from the HTTP request.
  * @param {Object} res - The response object from the HTTP response.
  * @param {Function} next - The next function in the middleware chain.
- * @throws {CustomError} If the user tries to change his password, if the user isn't found in database
+ * @throws {CustomError} If the user tries to change his password,
+ * if there is no body, if the user isn't found in database,
  * or if something goes wrong with the database
  */
 async function update_current_user(req, res, next) {
   try {
     if (!req.body) {
-      return next(
-        new CustomError("You must update, at least, one attribute", 400)
-      );
-    }
-
-    if (req.body.password) {
-      if (req.file) {
-        await delete_image_in_cloud(req.file.public_id);
-      }
-      return next(new CustomError("You cannot change your password here", 404)); //luego agregar link al front
+      throw new CustomError("You must update, at least, one attribute", 400);
     }
 
     const found_user = await find_user_by_id_user(req.id_user);
 
     if (are_equal(found_user.length, 0)) {
-      if (req.file) {
-        await delete_image_in_cloud(req.file.public_id);
-      }
-      return next(new CustomError("User not found", 404));
+      throw new CustomError("User not found", 404);
     }
 
     if (!are_equal(found_user[0].public_id_profile_photo, "default_bx6tka")) {
@@ -368,15 +373,11 @@ async function update_current_user(req, res, next) {
 
     if (req.body.email) {
       const found_user = await find_user_by_email(req.body.email);
+
       if (is_greater_than(found_user.length, 0)) {
-        if (req.file) {
-          await delete_image_in_cloud(req.file.public_id);
-        }
-        return next(
-          new CustomError(
-            "There is already a user with this email address",
-            400
-          )
+        throw new CustomError(
+          "There is already a user with this email address",
+          400
         );
       }
     }
@@ -413,16 +414,15 @@ async function update_current_user(req, res, next) {
     const updated_user = await update_user(new_user_information);
 
     if (are_equal(updated_user, 0)) {
-      if (req.file) {
-        await delete_image_in_cloud(req.file.public_id);
-      }
-      return next(new CustomError("User not updated", 500));
+      throw new CustomError("User not updated", 500);
     }
 
-    delete new_user_information.id_user;
-    delete new_user_information.password;
-
-    return return_response(res, 200, new_user_information, true);
+    return return_response(
+      res,
+      200,
+      { message: "User updated successfully" },
+      true
+    );
   } catch (error) {
     if (req.file) {
       await delete_image_in_cloud(req.file.public_id);
@@ -453,10 +453,13 @@ async function logout(req, res, next) {
     await create_new_invalid_token(new_invalid_token);
 
     res.clearCookie("access_token");
+
     res.clearCookie("refresh_token");
+
     if (req.user) {
       req.logout();
     }
+
     return return_response(
       res,
       200,
@@ -485,13 +488,7 @@ async function send_feedback(req, res, next) {
       comment: comment,
     };
 
-    const created_feedback = await create_new_feedback(new_feedback);
-
-    if (are_equal(created_feedback.length, 0)) {
-      return next(
-        new CustomError("Something went wrong with the database", 500)
-      );
-    }
+    await create_new_feedback(new_feedback);
 
     return return_response(res, 201, { message: "Feedback sent" }, true);
   } catch (error) {
@@ -510,8 +507,11 @@ async function send_feedback(req, res, next) {
 async function delete_user(req, res, next) {
   try {
     await delete_time_set_by_id_user(req.id_user);
+
     await delete_repetition_sets_by_id_user(req.id_user);
+
     await delete_sets_by_id_user(req.id_user);
+
     await delete_works_by_id_user(req.id_user);
 
     const found_photos = await find_photos_by_id_user(req.id_user);
@@ -523,29 +523,31 @@ async function delete_user(req, res, next) {
     }
 
     await delete_photos_by_id_user(req.id_user);
+
     await delete_composed_by_by_id_user(req.id_user);
+
     await delete_exercises_by_id_user(req.id_user);
+
     await delete_scheduled_by_id_user(req.id_user);
+
     await delete_routines_by_id_user(req.id_user);
+
     await delete_feedback_by_id_user(req.id_user);
+
     await delete_invalid_tokens_by_id_user(req.id_user);
+
     await delete_auth_by_id_user(req.id_user);
 
     const current_user = await find_user_by_id_user(req.id_user);
+
     await delete_image_in_cloud(current_user[0].public_id_profile_photo);
 
-    const deleted_user = await delete_user_by_id_user(req.id_user);
-    if (are_equal(deleted_user, 0)) {
-      return next(
-        new CustomError(
-          "User could not be deleted completely. Perhaps some associations were lost in the process",
-          500
-        )
-      );
-    }
+    await delete_user_by_id_user(req.id_user);
 
     res.clearCookie("access_token");
+
     res.clearCookie("refresh_token");
+
     if (req.user) {
       req.logout();
     }
@@ -560,6 +562,8 @@ async function delete_user(req, res, next) {
     next(error);
   }
 }
+
+//Exports
 
 module.exports = {
   register,

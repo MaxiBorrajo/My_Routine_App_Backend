@@ -1,17 +1,21 @@
-//create, update and delete
+//Imports
+
 const { pool } = require("../config/db_connection");
+
 const CustomError = require("../utils/custom_error");
+
+//Methods
 
 /**
  * Creates a new repetition set object
- * @param {Object} repetition_set - Object that contains information about the repetition entity. 
+ * @param {Object} repetition_set - Object that contains information about the repetition entity.
  * It must contain:
  * repetition_set.id_user {number} - User's id. Must be stored in database and be an integer
  * repetition_set.id_exercise {number} - Exercise's id. Must be stored in database and be an integer
  * repetition_set.id_set {number} - Set's id. Must be stored in database and be an integer
  * repetition_set.repetition {number} - How much repetitions are done in the set
  * @returns {Promise<Object>} - A promise created of the repetition set object
- * @throws {CustomError} - If something goes wrong with the database
+ * @throws {CustomError} - If something goes wrong with database
  */
 async function create_new_repetition_set(repetition_set) {
   try {
@@ -26,25 +30,23 @@ async function create_new_repetition_set(repetition_set) {
         `,
       [id_user, id_exercise, id_set, repetition]
     );
+
     return new_repetition_set.rowCount;
   } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, error.status);
   }
 }
 
 /**
  * Updates repetition set object.
- * @param {Object} repetition_set - Object that contains information about the repetition set entity. 
+ * @param {Object} repetition_set - Object that contains information about the repetition set entity.
  * It must contain:
  * repetition_set.id_user {number} - User's id. Must be stored in database and be an integer
  * repetition_set.id_exercise {number} - Exercise's id. Must be stored in database and be an integer
  * repetition_set.id_set {number} - Set's id. Must be stored in database and be an integer
  * repetition_set.repetition {number} - How much repetitions to do in the set
  * @returns {Promise<Object>} - A promise of to the updated repetition set object.
- * @throws {CustomError} - If something goes wrong with the database
+ * @throws {CustomError} - If something goes wrong with database
  */
 async function update_repetition_set(repetition_set) {
   try {
@@ -61,10 +63,7 @@ async function update_repetition_set(repetition_set) {
 
     return updated_repetition_set.rowCount;
   } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, error.status);
   }
 }
 
@@ -72,7 +71,7 @@ async function update_repetition_set(repetition_set) {
  * Deletes repetition sets by id_user
  * @param {number} id_user - User's id. It must be a integer and be store in database
  * @returns {Promise<Object>} - A promise of the deleted repetition sets
- * @throws {CustomError} - If something goes wrong with the database
+ * @throws {CustomError} - If something goes wrong with database
  */
 async function delete_repetition_sets_by_id_user(id_user) {
   try {
@@ -83,12 +82,10 @@ async function delete_repetition_sets_by_id_user(id_user) {
     `,
       [id_user]
     );
+
     return deleted_repetition_sets.rowCount;
   } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, error.status);
   }
 }
 
@@ -97,9 +94,12 @@ async function delete_repetition_sets_by_id_user(id_user) {
  * @param {number} id_user - User's id. It must be a integer and be store in database
  * @param {number} id_exercise - Exercise's id. It must be a integer and be store in database
  * @returns {Promise<Object>} - A promise of the deleted repetition sets
- * @throws {CustomError} - If something goes wrong with the database
+ * @throws {CustomError} - If something goes wrong with database
  */
-async function delete_repetition_sets_by_id_user_id_exercise(id_user, id_exercise) {
+async function delete_repetition_sets_by_id_user_id_exercise(
+  id_user,
+  id_exercise
+) {
   try {
     const deleted_repetition_sets = await pool.query(
       `
@@ -108,12 +108,10 @@ async function delete_repetition_sets_by_id_user_id_exercise(id_user, id_exercis
     `,
       [id_user, id_exercise]
     );
+
     return deleted_repetition_sets.rowCount;
   } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, error.status);
   }
 }
 
@@ -123,7 +121,7 @@ async function delete_repetition_sets_by_id_user_id_exercise(id_user, id_exercis
  * @param {number} id_exercise - Exercise's id. It must be a integer and be store in database
  * @param {number} id_set - Set's id. It must be a integer and be store in database
  * @returns {Promise<Object>} - A promise of the deleted repetition set
- * @throws {CustomError} - If something goes wrong with the database
+ * @throws {CustomError} - If something goes wrong with database
  */
 async function delete_repetition_set_by_id_user_id_exercise_id_set(
   id_user,
@@ -138,12 +136,10 @@ async function delete_repetition_set_by_id_user_id_exercise_id_set(
     `,
       [id_user, id_exercise, id_set]
     );
+
     return deleted_repetition_set.rowCount;
   } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, error.status);
   }
 }
 
@@ -153,7 +149,7 @@ async function delete_repetition_set_by_id_user_id_exercise_id_set(
  * @param {number} id_exercise - Exercise's id. It must be a integer and be store in database
  * @param {number} id_set - Set's id. It must be a integer and be store in database
  * @returns {Promise<Object>} - A promise of the found repetition set
- * @throws {CustomError} - If something goes wrong with the database
+ * @throws {CustomError} - If something goes wrong with database
  */
 async function find_repetition_set_by_id_user_id_exercise_id_set(
   id_user,
@@ -168,20 +164,20 @@ async function find_repetition_set_by_id_user_id_exercise_id_set(
     `,
       [id_user, id_exercise, id_set]
     );
+
     return found_repetition_set.rows;
   } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, error.status);
   }
 }
 
+//Methods
+
 module.exports = {
-  create_new_repetition_set,//✓ //✓
-  delete_repetition_sets_by_id_user,//✓ //✓
-  delete_repetition_sets_by_id_user_id_exercise,//✓ //✓
-  delete_repetition_set_by_id_user_id_exercise_id_set,//✓ //✓
-  update_repetition_set,//✓ //✓
-  find_repetition_set_by_id_user_id_exercise_id_set //✓ //✓
+  create_new_repetition_set,
+  delete_repetition_sets_by_id_user,
+  delete_repetition_sets_by_id_user_id_exercise,
+  delete_repetition_set_by_id_user_id_exercise_id_set,
+  update_repetition_set,
+  find_repetition_set_by_id_user_id_exercise_id_set,
 };

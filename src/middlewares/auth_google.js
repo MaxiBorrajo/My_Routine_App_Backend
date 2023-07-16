@@ -1,15 +1,23 @@
+//Imports
 const passport = require("passport");
+
 const GoogleStrategy = require("passport-google-oauth2").Strategy;
+
 const {
   create_new_user,
   find_user_by_email,
   update_user,
 } = require("../repositories/user_repository");
+
 const {
-  upload_image_to_cloud
+  upload_image_to_cloud,
 } = require("../middlewares/upload_images_middleware");
+
 const { are_equal } = require("../utils/utils_functions");
+
 const CustomError = require("../utils/custom_error");
+
+//Methods
 
 passport.use(
   new GoogleStrategy(
@@ -45,13 +53,7 @@ passport.use(
             password: "",
           };
 
-          const created_user = await create_new_user(new_user);
-
-          if (!are_equal(created_user, 1)) {
-            return next(
-              new CustomError("Something went wrong. User not created", 500)
-            );
-          }
+          await create_new_user(new_user);
 
           let found_user = await find_user_by_email(profile.email);
 
@@ -68,20 +70,17 @@ passport.use(
 
         return done(null, found_user[0]);
       } catch (error) {
-        return done(
-          new CustomError(`Something went wrong. Error: ${error.message}`, 500)
-        );
+        return done(new CustomError(error.message, 500));
       }
     }
   )
 );
+
 passport.serializeUser(function (user, done) {
   try {
     done(null, user);
   } catch (error) {
-    return done(
-      new CustomError(`Something went wrong. Error: ${error.message}`, 500)
-    );
+    return done(new CustomError(error.message, 500));
   }
 });
 
@@ -89,8 +88,6 @@ passport.deserializeUser(function (user, done) {
   try {
     done(null, user);
   } catch (error) {
-    return done(
-      new CustomError(`Something went wrong. Error: ${error.message}`, 500)
-    );
+    return done(new CustomError(error.message, 500));
   }
 });

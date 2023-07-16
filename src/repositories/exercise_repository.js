@@ -1,17 +1,25 @@
+//Imports
+
 const { pool } = require("../config/db_connection");
+
 const CustomError = require("../utils/custom_error");
+
+const { are_equal } = require("../utils/utils_functions");
+
+//Methods
 
 /**
  * Creates a new exercise
- * @param {Object} exercise - Object that contains information about the exercise entity.
+ * @param {Object} exercise - Object that contains information about the exercise entity
  * It must contain:
- * exercise.id_user {number} - User's id. Must be stored in database and be an integer.
+ * exercise.id_user {number} - User's id. Must be stored in database and be an integer
  * exercise.exercise_name {string} - Name of the exercise
  * exercise.intensity {number} - Intensity of the exercise 1 (low), 2 (mid), 3 (high)
  * exercise.description {string} - A description of the exercise
- * exercise.time_after_exercise {string} - The time of rest after a exercise ('5 seconds', '10 minutes', '10 minutes 5 seconds')
+ * exercise.time_after_exercise {string} - The time of rest after a exercise
+ * ('5 seconds', '10 minutes', '10 minutes 5 seconds')
  * @returns {Promise<Object>} - A promise of the created exercise
- * @throws {CustomError} - If something goes wrong with the database
+ * @throws {CustomError} - If something goes wrong with database
  */
 async function create_new_exercise(exercise) {
   try {
@@ -33,12 +41,14 @@ async function create_new_exercise(exercise) {
         `,
       [id_user, exercise_name, intensity, description, time_after_exercise]
     );
+
+    if (are_equal(new_exercise.rowCount, 0)) {
+      throw new CustomError("Exercise could not be created", 500);
+    }
+
     return new_exercise.rowCount;
   } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, error.status);
   }
 }
 
@@ -48,7 +58,7 @@ async function create_new_exercise(exercise) {
  * @param {string} sort_by - Attribute of an exercise by which to order the results
  * @param {string} order - ASC (ascending) or DESC (descending)
  * @returns {Promise<Object>} - A promise of the found exercises
- * @throws {CustomError} - If something goes wrong with the database
+ * @throws {CustomError} - If something goes wrong with database
  */
 async function find_exercises_by_id_user(id_user, sort_by, order) {
   try {
@@ -58,14 +68,14 @@ async function find_exercises_by_id_user(id_user, sort_by, order) {
     e.time_after_exercise, e.intensity FROM EXERCISE AS e
     WHERE e.id_user = $1
   `;
+
     query += sort_by && order ? `ORDER BY ${sort_by} ${order}` : "";
+
     const found_exercises = await pool.query(query, [id_user]);
+
     return found_exercises.rows;
   } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, error.status);
   }
 }
 
@@ -77,7 +87,7 @@ async function find_exercises_by_id_user(id_user, sort_by, order) {
  * @param {string} sort_by - Attribute of an exercise by which to order the results
  * @param {string} order - ASC (ascending) or DESC (descending)
  * @returns {Promise<Object>} - A promise of the found exercises
- * @throws {CustomError} - If something goes wrong with the database
+ * @throws {CustomError} - If something goes wrong with database
  */
 async function find_exercises_by_id_user_idMuscleGroup(
   id_user,
@@ -103,16 +113,17 @@ async function find_exercises_by_id_user_idMuscleGroup(
       } else {
         query += `w.id_muscle_group = $${index + 2} AND\n`;
       }
+
       params.push(id_muscle_group);
     });
+
     query += sort_by && order ? `ORDER BY ${sort_by} ${order}` : "";
+
     const found_exercises = await pool.query(query, params);
+
     return found_exercises.rows;
   } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, error.status);
   }
 }
 
@@ -123,7 +134,7 @@ async function find_exercises_by_id_user_idMuscleGroup(
  * @param {string} sort_by - Attribute of an exercise by which to order the results
  * @param {string} order - ASC (ascending) or DESC (descending)
  * @returns {Promise<Object>} - A promise of the found exercises
- * @throws {CustomError} - If something goes wrong with the database
+ * @throws {CustomError} - If something goes wrong with database
  */
 async function find_exercises_by_id_user_intensity(
   id_user,
@@ -145,10 +156,7 @@ async function find_exercises_by_id_user_intensity(
 
     return found_exercises.rows;
   } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, error.status);
   }
 }
 
@@ -159,7 +167,7 @@ async function find_exercises_by_id_user_intensity(
  * @param {string} sort_by - Attribute of an exercise by which to order the results
  * @param {string} order - ASC (ascending) or DESC (descending)
  * @returns {Promise<Object>} - A promise of the found exercises
- * @throws {CustomError} - If something goes wrong with the database
+ * @throws {CustomError} - If something goes wrong with database
  */
 async function find_exercises_by_id_user_isFavorite(
   id_user,
@@ -184,10 +192,7 @@ async function find_exercises_by_id_user_isFavorite(
 
     return found_exercises.rows;
   } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, error.status);
   }
 }
 
@@ -196,7 +201,7 @@ async function find_exercises_by_id_user_isFavorite(
  * @param {number} id_user - User's id. It must be a integer and be store in database
  * @param {number} id_exercise - Exercise's id. It must be a integer and be store in database
  * @returns {Promise<Object>} - A promise of the found exercise
- * @throws {CustomError} - If something goes wrong with the database
+ * @throws {CustomError} - If something goes wrong with database
  */
 async function find_exercise_by_id_user_id_exercise(id_user, id_exercise) {
   try {
@@ -209,27 +214,31 @@ async function find_exercise_by_id_user_id_exercise(id_user, id_exercise) {
       `,
       [id_user, id_exercise]
     );
+
+    if (are_equal(found_exercise.rows.length, 0)) {
+      throw new CustomError("Exercise not found", 404);
+    }
+
     return found_exercise.rows;
   } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, error.status);
   }
 }
 
 /**
  * Updates a specific exercise
- * @param {Object} exercise - Object that contains information about the exercise entity. It must contain:
+ * @param {Object} exercise - Object that contains information about the exercise entity.
+ * It must contain:
  * exercise.id_user {number} - User's id. Must be stored in database and be an integer.
  * exercise.id_exercise {number} - Exercise's id. Must be stored in database and be an integer.
  * exercise.exercise_name {string} - Name of the exercise
  * exercise.intensity {number} - Intensity of the exercise 1 (low), 2 (mid), 3 (high)
  * exercise.is_favorite {boolean} - If the exercise is a favorite one or not
  * exercise.description {string} - A description of the exercise
- * exercise.time_after_exercise {string} - The time of rest after a exercise ('5 seconds', '10 minutes', '10 minutes 5 seconds')
+ * exercise.time_after_exercise {string} - The time of rest after a exercise
+ * ('5 seconds', '10 minutes', '10 minutes 5 seconds')
  * @returns {Promise<Object>} - A promise of the updated exerise.
- * @throws {CustomError} - If something goes wrong with the database
+ * @throws {CustomError} - If something goes wrong with database
  */
 async function update_exercise(exercise) {
   try {
@@ -261,12 +270,14 @@ async function update_exercise(exercise) {
         time_after_exercise,
       ]
     );
+
+    if (are_equal(updated_exercise.rowCount, 0)) {
+      throw new CustomError("Exercise could not be updated", 500);
+    }
+
     return updated_exercise.rowCount;
   } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, error.status);
   }
 }
 
@@ -275,7 +286,7 @@ async function update_exercise(exercise) {
  * @param {number} id_user - User's id. It must be a integer and be store in database
  * @param {number} id_exercise - Exercise's id. It must be a integer and be store in database
  * @returns {Promise<Object>} - A promise of the deleted exercise
- * @throws {CustomError} - If something goes wrong with the database
+ * @throws {CustomError} - If something goes wrong with database
  */
 async function delete_exercise_by_id_user_id_exercise(id_user, id_exercise) {
   try {
@@ -286,12 +297,17 @@ async function delete_exercise_by_id_user_id_exercise(id_user, id_exercise) {
       `,
       [id_user, id_exercise]
     );
+
+    if (are_equal(deleted_exercise.rowCount, 0)) {
+      throw new CustomError(
+        "Exercise could not be deleted completely. Perhaps some associations were lost in the process",
+        500
+      );
+    }
+
     return deleted_exercise.rowCount;
   } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, error.status);
   }
 }
 
@@ -299,7 +315,7 @@ async function delete_exercise_by_id_user_id_exercise(id_user, id_exercise) {
  * Delete all exercises by id_user
  * @param {number} id_user - User's id. It must be a integer and be store in database
  * @returns {Promise<Object>} - A promise of the deleted exercises
- * @throws {CustomError} - If something goes wrong with the database
+ * @throws {CustomError} - If something goes wrong with database
  */
 async function delete_exercises_by_id_user(id_user) {
   try {
@@ -310,12 +326,10 @@ async function delete_exercises_by_id_user(id_user) {
       `,
       [id_user]
     );
+
     return deleted_exercises.rowCount;
   } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, error.status);
   }
 }
 
@@ -324,7 +338,7 @@ async function delete_exercises_by_id_user(id_user) {
  * @param {number} id_user - User's id. It must be a integer and be store in database
  * @param {number} idRoutine - Routine's id. It must be a integer and be store in database
  * @returns {Promise<Object>} - A promise of the found exercises.
- * @throws {CustomError} - If something goes wrong with the database
+ * @throws {CustomError} - If something goes wrong with database
  */
 async function find_exercise_by_id_user_idRoutine(id_user, idRoutine) {
   try {
@@ -339,24 +353,24 @@ async function find_exercise_by_id_user_idRoutine(id_user, idRoutine) {
       `,
       [id_user, idRoutine]
     );
+
     return found_exercises.rows;
   } catch (error) {
-    throw new CustomError(
-      `Something went wrong with database. Error: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, error.status);
   }
 }
 
+//Exports
+
 module.exports = {
-  create_new_exercise, //✓ //✓
-  delete_exercise_by_id_user_id_exercise, //✓ //✓
-  delete_exercises_by_id_user, //✓ //✓
-  find_exercise_by_id_user_id_exercise, //✓ //✓
-  find_exercise_by_id_user_idRoutine, //✓ //✓
-  find_exercises_by_id_user, //✓ //✓
-  find_exercises_by_id_user_idMuscleGroup, //✓ //✓
-  find_exercises_by_id_user_intensity, //✓ //✓
+  create_new_exercise,
+  delete_exercise_by_id_user_id_exercise,
+  delete_exercises_by_id_user,
+  find_exercise_by_id_user_id_exercise,
+  find_exercise_by_id_user_idRoutine,
+  find_exercises_by_id_user,
+  find_exercises_by_id_user_idMuscleGroup,
+  find_exercises_by_id_user_intensity,
   find_exercises_by_id_user_isFavorite,
-  update_exercise, //✓ //✓
+  update_exercise,
 };
