@@ -57,7 +57,7 @@ function meets_with_password_requirements(req, res, next) {
     const password = req.body.password;
 
     if (!password) {
-      throw new CustomError("A 'password' attribute is required", 400);
+      throw new CustomError("'password' attribute is required", 400);
     }
 
     const regular_expression_password =

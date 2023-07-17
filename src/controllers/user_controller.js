@@ -250,10 +250,6 @@ async function reset_password(req, res, next) {
       throw new CustomError("Any verification code was provided", 400);
     }
 
-    if (!req.body.password) {
-      throw new CustomError("Any password was provided", 400);
-    }
-
     const payload = jwt.verify(
       req.params.reset_password_token,
       process.env.ACCESS_JWT_SECRET
@@ -279,10 +275,9 @@ async function reset_password(req, res, next) {
     ) {
       throw new CustomError("Invalid authorization", 401);
     }
-
     if (
       is_greater_than(
-        new Date(Date.now()).toISOString(),
+        new Date(Date.now()),
         found_auth[0].reset_password_token_expiration
       )
     ) {
@@ -357,7 +352,7 @@ async function get_current_user(req, res, next) {
  */
 async function update_current_user(req, res, next) {
   try {
-    if (!req.body) {
+    if (are_equal(Object.keys(req.body).length, 0)) {
       throw new CustomError("You must update, at least, one attribute", 400);
     }
 

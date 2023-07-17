@@ -51,15 +51,6 @@ async function auth_middleware(req, res, next) {
 
       await create_new_invalid_token(new_invalid_token);
 
-      const refresh_token_expiration = payload.exp;
-
-      if (is_greater_than(refresh_token_expiration, Date.now())) {
-        throw new CustomError(
-          "Your session has expired. Try to login again",
-          401
-        );
-      }
-
       const found_user = await find_user_by_id_user(payload.id_user);
 
       const found_auth = await find_auth_by_id_user(payload.id_user);
@@ -83,7 +74,7 @@ async function auth_middleware(req, res, next) {
 
       if (!are_equal(updated_auth, 1)) {
         throw new CustomError(
-          "Something went wrong. Authentication not created",
+          "Authentication not created",
           500
         );
       }
@@ -109,22 +100,6 @@ async function auth_middleware(req, res, next) {
       req.cookies.access_token,
       process.env.ACCESS_JWT_SECRET
     );
-
-    const access_token_expiration = payload.exp;
-
-    if (is_greater_than(access_token_expiration, Date.now())) {
-      const new_invalid_token = {
-        id_user: payload.id_user,
-        token: req.cookies.access_token,
-      };
-
-      await create_new_invalid_token(new_invalid_token);
-
-      throw new CustomError(
-        "Your session has expired. Try to login again",
-        401
-      );
-    }
 
     const found_user = await find_user_by_id_user(payload.id_user);
 

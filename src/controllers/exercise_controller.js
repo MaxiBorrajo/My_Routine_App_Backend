@@ -253,7 +253,7 @@ async function find_exercises_of_routine(req, res, next) {
  */
 async function update_specific_exercise(req, res, next) {
   try {
-    if (!req.body) {
+    if (are_equal(Object.keys(req.body).length, 0)) {
       throw new CustomError("You must update, at least, one attribute", 400);
     }
 

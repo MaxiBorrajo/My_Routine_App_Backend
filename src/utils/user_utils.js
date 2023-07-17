@@ -46,11 +46,11 @@ async function match_passwords(password, encrypted_password) {
  */
 function generate_tokens(data) {
   const access_token = jwt.sign(data, process.env.ACCESS_JWT_SECRET, {
-    expiresIn: "120 s",
+    expiresIn: 2 * 60 * 1000,
   });
 
   const refresh_token = jwt.sign(data, process.env.REFRESH_JWT_SECRET, {
-    expiresIn: "7d",
+    expiresIn: 7 * 24 * 60 * 60 * 1000,
   });
 
   const tokens = {
@@ -80,7 +80,7 @@ function get_reset_password_token(id_user) {
 
     const reset_password_token_data = {
       reset_password_token: reset_password_token,
-      reset_password_token_expiration: new Date(Date.now() + 3600000),
+      reset_password_token_expiration: new Date(Date.now() +  10 * 60 * 1000),
     };
 
     return reset_password_token_data;
@@ -146,7 +146,9 @@ async function get_authorization(user, res, next) {
 
     delete user.id_user;
 
-    return_response(res, 201, user, true);
+    const status = are_equal(found_auth.length, 0) ? 201 : 200;
+    
+    return_response(res, status, user, true);
   } catch (error) {
     next(error);
   }
