@@ -80,7 +80,7 @@ function get_reset_password_token(id_user) {
 
     const reset_password_token_data = {
       reset_password_token: reset_password_token,
-      reset_password_token_expiration: new Date(Date.now() +  10 * 60 * 1000),
+      reset_password_token_expiration: new Date(Date.now() + 10 * 60 * 1000),
     };
 
     return reset_password_token_data;
@@ -99,7 +99,7 @@ function get_reset_password_token(id_user) {
  * @throws {CustomError} If the user isn't found in database or if authentication
  * cannot be sent
  */
-async function get_authorization(user, res, next) {
+async function get_authorization(user, res, next, is_from_google) {
   try {
     const { access_token, refresh_token } = generate_tokens({
       id_user: user.id_user,
@@ -133,13 +133,15 @@ async function get_authorization(user, res, next) {
     res.cookie("access_token", access_token, {
       maxAge: 120 * 1000,
       httpOnly: true,
-      secure: true,
     });
 
     res.cookie("refresh_token", refresh_token, {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       httpOnly: true,
-      secure: true,
+    });
+
+    res.cookie("is_logged_in", true, {
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     delete user.password;
@@ -147,8 +149,11 @@ async function get_authorization(user, res, next) {
     delete user.id_user;
 
     const status = are_equal(found_auth.length, 0) ? 201 : 200;
-    
-    return_response(res, status, user, true);
+
+    if(!is_from_google){
+      return return_response(res, status, user, true);
+    }
+    res.redirect('http://localhost:5173/dashboard')
   } catch (error) {
     next(error);
   }

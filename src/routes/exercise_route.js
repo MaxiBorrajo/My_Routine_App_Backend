@@ -6,7 +6,7 @@ const router = express.Router();
 
 const validate_fields_middleware = require("../middlewares/validate_fields_middleware");
 
-const {cache_middleware} = require("../middlewares/cache_middleware");
+const { cache_middleware } = require("../middlewares/cache_middleware");
 
 const {
   create_exercise,
@@ -14,7 +14,8 @@ const {
   find_exercises_of_routine,
   update_specific_exercise,
   find_specific_exercise,
-  delete_specific_exercise
+  delete_specific_exercise,
+  find_id_exercise_of_last_exercise_created,
 } = require("../controllers/exercise_controller");
 
 const auth_middleware = require("../middlewares/auth_middleware");
@@ -75,9 +76,35 @@ router.get(
 );
 
 /**
+ * GET route to get the id_exercise of the last exercise created
+ *
+ * @route {GET} /v1/exercise/last
+ *
+ * @throws {CustomError} - If something goes wrong with the database
+ */
+router.get(
+  "/last",
+  check_invalid_tokens_middleware,
+  auth_middleware,
+  cache_middleware,
+  find_id_exercise_of_last_exercise_created
+);
+
+/**
  * GET route to find all exercises of a routine
  *
  * @route {GET} /v1/exercise/routine/:id_routine
+ *
+ * @query sort_by (optional) - The attribute by which to order,
+ * can be by exercise_name, created_at, or intensity. If you add sort_by must add an order too
+ * @query order (optional) - In which order to do it, ascending, ASC should be written or descending,
+ * DESC should be written
+ * @query filter (optional) - The attribute by which to filter, can be by intensity, muscle_group
+ * or is_favorite. If you add filter must add filter_values too
+ * @query filter_values (optional) - The values by which to filter, if it is by muscle group
+ * you must add an array with the ids of those muscle groups, if it is by intensity you must
+ * add an array with the integers that represent the different intensities,
+ * and if by is_favorite you must put either true or false as value
  *
  * @throws {CustomError} - If the routine isn't found or if something goes wrong with the
  * database
@@ -110,7 +137,7 @@ router.get(
  *
  * @route {PUT} /v1/exercise/:id_exercise
  *
- * Attributes allow to change
+ * Attributes allowed to change
  * @body {String} exercise_name
  * @body {String} time_after_exercise. Must be like ('5 seconds', '10 minutes', '10 minutes 5 seconds')
  * @body {String} description
@@ -132,7 +159,7 @@ router.put(
  *
  * @route {DELETE} /v1/exercise/:id_exercise
  *
- * @throws {CustomError} - If the exercise isn't found in database or 
+ * @throws {CustomError} - If the exercise isn't found in database or
  * if something goes wrong with the database
  */
 router.delete(

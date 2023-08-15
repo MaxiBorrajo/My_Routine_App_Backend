@@ -68,7 +68,7 @@ passport.use(
           return done(null, found_user[0]);
         }
 
-        return done(null, found_user[0]);
+        return done(null, user[0]);
       } catch (error) {
         return done(new CustomError(error.message, 500));
       }

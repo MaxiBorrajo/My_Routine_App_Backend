@@ -113,7 +113,7 @@ async function register(req, res, next) {
 
     let found_user = await find_user_by_email(email);
 
-    return get_authorization(found_user[0], res, next);
+    return get_authorization(found_user[0], res, next, false);
   } catch (error) {
     next(error);
   }
@@ -142,7 +142,7 @@ async function login(req, res, next) {
       throw new CustomError("Email or password are incorrect", 404);
     }
 
-    return get_authorization(found_user[0], res, next);
+    return get_authorization(found_user[0], res, next, false);
   } catch (error) {
     next(error);
   }
@@ -159,7 +159,7 @@ async function login(req, res, next) {
  */
 async function google_authentication(req, res, next) {
   try {
-    return get_authorization(req.user, res, next);
+    return get_authorization(req.user, res, next, true);
   } catch (error) {
     next(error);
   }
@@ -203,7 +203,7 @@ async function forgot_password(req, res, next) {
       throw new CustomError("Something went wrong. Try again later", 500);
     }
 
-    const reset_password_url = `http://localhost:3000/v1/user/reset_password/${reset_password_token}`; //link al front
+    const reset_password_url = `http://localhost:5173/reset_password/${reset_password_token}`; //link al front
     //esto despues va a ser un archivo html lindo
     const reset_password_email_body = `
         <h1>Reset password</h1>
@@ -236,9 +236,9 @@ async function forgot_password(req, res, next) {
  * Controller that change the password of the user encrypted
  * in the reset password token
  *
- * @param {Object} req - The request object from the HTTP request.
- * @param {Object} res - The response object from the HTTP response.
- * @param {Function} next - The next function in the middleware chain.
+ * @param {Object} req - The request object from the HTTP request
+ * @param {Object} res - The response object from the HTTP response
+ * @param {Function} next - The next function in the middleware chain
  * @throws {CustomError}  If any the reset password token was provided, if
  * any password was provided, if the verification code is invalid,
  * if it is expired, if the user isn't found
@@ -316,9 +316,9 @@ async function reset_password(req, res, next) {
 /**
  * Controller that gets current user's information
  *
- * @param {Object} req - The request object from the HTTP request.
- * @param {Object} res - The response object from the HTTP response.
- * @param {Function} next - The next function in the middleware chain.
+ * @param {Object} req - The request object from the HTTP request
+ * @param {Object} res - The response object from the HTTP response
+ * @param {Function} next - The next function in the middleware chain
  * @throws {CustomError}  If the user isn't found or if something goes wrong
  * with the database
  */
@@ -335,6 +335,21 @@ async function get_current_user(req, res, next) {
     delete found_user[0].password;
 
     return return_response(res, 200, found_user[0], true);
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Controller that checks if the current user is logged in
+ *
+ * @param {Object} req - The request object from the HTTP request
+ * @param {Object} res - The response object from the HTTP response
+ * @param {Function} next - The next function in the middleware chain
+ */
+async function is_logged_in(req, res, next) {
+  try {
+    return return_response(res, 200, { message: "is_logged_in" }, true);
   } catch (error) {
     next(error);
   }
@@ -366,7 +381,7 @@ async function update_current_user(req, res, next) {
       await delete_image_in_cloud(found_user[0].public_id_profile_photo);
     }
 
-    if (req.body.email) {
+    if (req.body.email && req.body.email !== found_user[0].email) {
       const found_user = await find_user_by_email(req.body.email);
 
       if (is_greater_than(found_user.length, 0)) {
@@ -422,6 +437,7 @@ async function update_current_user(req, res, next) {
     if (req.file) {
       await delete_image_in_cloud(req.file.public_id);
     }
+    console.log(error)
     next(error);
   }
 }
@@ -447,12 +463,14 @@ async function logout(req, res, next) {
 
     await create_new_invalid_token(new_invalid_token);
 
-    res.clearCookie("access_token");
-
-    res.clearCookie("refresh_token");
-
-    if (req.user) {
-      req.logout();
+    const cookies = req.cookies;
+    
+    for (let cookieName in cookies) {
+      res.clearCookie(cookieName, {
+        path: "/",
+        httpOnly: true,
+        expires: new Date(0),
+      });
     }
 
     return return_response(
@@ -571,4 +589,5 @@ module.exports = {
   logout,
   send_feedback,
   delete_user,
+  is_logged_in,
 };

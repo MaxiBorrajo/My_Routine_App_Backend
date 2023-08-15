@@ -21,6 +21,7 @@ const {
   logout,
   send_feedback,
   delete_user,
+  is_logged_in
 } = require("../controllers/user_controller");
 
 const {
@@ -113,7 +114,7 @@ router.get(
   "/google/redirect",
   passport.authenticate("google"),
   cache_middleware,
-  google_authentication
+  google_authentication,
 );
 
 /**
@@ -163,6 +164,19 @@ router.get(
   auth_middleware,
   cache_middleware,
   get_current_user
+);
+
+/**
+ * GET route to check is the current user is logged in or not
+ *
+ * @route {GET} /v1/user/is_logged_in
+ */
+router.get(
+  "/is_logged_in",
+  check_invalid_tokens_middleware,
+  auth_middleware,
+  cache_middleware,
+  is_logged_in
 );
 
 /**

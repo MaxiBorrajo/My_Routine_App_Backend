@@ -38,7 +38,12 @@ const set_route = require("./src/routes/set_route");
 
 //Dependencies
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173", // Reemplaza con el dominio de frontend
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 

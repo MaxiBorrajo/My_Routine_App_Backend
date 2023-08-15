@@ -318,6 +318,31 @@ async function find_routines_by_id_user_id_day(id_user, days, sort_by, order) {
   }
 }
 
+/**
+ * Finds the id_routine of the last routine created
+ * @param {number} id_user - User's id. It must be a integer and be store in database
+ * @returns {Promise<Object>} - A promise of the id_routine
+ * @throws {CustomError} - If something goes wrong with database
+ */
+async function find_id_routine_of_last_routine_created_by_id_user(
+  id_user
+) {
+  try {
+    const found_id_routine = await pool.query(
+      `
+      SELECT MAX(r.id_routine)
+      FROM "ROUTINE" AS r
+      WHERE r.id_user = $1
+      `,
+      [id_user]
+    );
+
+    return found_id_routine.rows;
+  } catch (error) {
+    throw new CustomError(error.message, error.status);
+  }
+}
+
 //Exports
 
 module.exports = {
@@ -330,4 +355,5 @@ module.exports = {
   find_routines_by_id_user_id_day,
   find_routines_of_exercise_by_id_user_idExercise,
   update_routine,
+  find_id_routine_of_last_routine_created_by_id_user
 };

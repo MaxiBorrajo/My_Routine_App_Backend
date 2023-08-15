@@ -2,7 +2,6 @@
 
 const fs = require("fs");
 const multer = require("multer");
-const sharp = require("sharp");
 const cloudinary = require("cloudinary");
 
 //Methods
@@ -35,33 +34,7 @@ const upload_multer = multer({ storage: multer_storage });
  */
 function delete_image_from_localStorage(filepath) {
   try {
-    fs.unlinkSync(filepath);
-  } catch (error) {
-    throw error;
-  }
-}
-
-/**
- * Resize an image using sharp library
- * @param {Object} file - The file object to be resized
- * @returns {Promise<string>} A promise that resolves with the path of the optimized image file
- * @throws {Error} If an error occurs in the resize process
- */
-function resize_image(file) {
-  try {
-    return new Promise((resolve, reject) => {
-      const optimized_filename = `${file.fieldname}_optimize`;
-
-      sharp(file.path)
-        .resize(300)
-        .toFile(optimized_filename, (error, resize_file) => {
-          if (error) {
-            reject(error);
-            return;
-          }
-          resolve(optimized_filename);
-        });
-    });
+    fs.promises.unlink(filepath);
   } catch (error) {
     throw error;
   }
@@ -77,7 +50,17 @@ function resize_image(file) {
 async function upload_image_to_cloud(filepath) {
   //check
   try {
-    const uploaded_image = await cloudinary.v2.uploader.upload(filepath);
+    const uploaded_image = await cloudinary.v2.uploader.upload(filepath, {
+      transformation: [
+        {
+          width: 300,
+          height: 300,
+          aspect_ratio: "1:1",
+          crop: "fill_pad",
+          gravity: "auto",
+        },
+      ],
+    });
 
     const uploaded_image_info = {
       public_id: uploaded_image.public_id,
@@ -116,28 +99,25 @@ async function delete_image_in_cloud(public_id) {
  * @returns {void}
  * @throws {Error} If there was an error during the whole process
  */
-function process_image(req, res, next) {
-  if (!req.file) {
+async function process_image(req, res, next) {
+  try {
+    if (!req.file) {
+      return next();
+    }
+
+    const cloud_info = await upload_image_to_cloud(req.file.path);
+
+    delete_image_from_localStorage(req.file.path);
+
+    req.file.public_id = cloud_info.public_id;
+
+    req.file.url = cloud_info.url;
+
     return next();
+  } catch (error) {
+    console.log(error);
+    return next(error);
   }
-
-  resize_image(req.file)
-    .then(async (optimized_image_path) => {
-      const cloud_info = await upload_image_to_cloud(optimized_image_path);
-
-      delete_image_from_localStorage(req.file.path);
-
-      delete_image_from_localStorage(optimized_image_path);
-
-      req.file.public_id = cloud_info.public_id;
-
-      req.file.url = cloud_info.url;
-
-      next();
-    })
-    .catch((error) => {
-      next(error);
-    });
 }
 
 //Exports

@@ -35,6 +35,7 @@ const jwt = require("jsonwebtoken");
 async function auth_middleware(req, res, next) {
   try {
     if (!req.cookies.refresh_token) {
+      res.clearCookie("is_logged_in");
       throw new CustomError("Invalid authorization", 401);
     }
 
@@ -73,10 +74,7 @@ async function auth_middleware(req, res, next) {
       const updated_auth = await update_auth(found_auth[0]);
 
       if (!are_equal(updated_auth, 1)) {
-        throw new CustomError(
-          "Authentication not created",
-          500
-        );
+        throw new CustomError("Authentication not created", 500);
       }
 
       res.cookie("access_token", access_token, {
@@ -89,6 +87,10 @@ async function auth_middleware(req, res, next) {
         maxAge: 7 * 24 * 60 * 60 * 1000,
         httpOnly: true,
         secure: true,
+      });
+
+      res.cookie("is_logged_in", true, {
+        maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
       req.id_user = payload.id_user;
@@ -106,6 +108,10 @@ async function auth_middleware(req, res, next) {
     if (are_equal(found_user.length, 0)) {
       throw new CustomError("Invalid authorization", 401);
     }
+
+    res.cookie("is_logged_in", true, {
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
 
     req.id_user = payload.id_user;
 

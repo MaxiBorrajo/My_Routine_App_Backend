@@ -3,13 +3,15 @@
 const {
   create_new_exercise,
   delete_exercise_by_id_user_id_exercise,
-  find_exercise_by_id_user_idRoutine,
+  find_exercises_by_id_user_idRoutine,
   find_exercise_by_id_user_id_exercise,
   find_exercises_by_id_user_isFavorite,
   find_exercises_by_id_user,
   find_exercises_by_id_user_idMuscleGroup,
   find_exercises_by_id_user_intensity,
   update_exercise,
+  find_id_exercise_of_last_exercise_created_by_id_user,
+  find_not_included_exercises_by_id_user_idRoutine,
 } = require("../repositories/exercise_repository");
 
 const {
@@ -190,7 +192,7 @@ async function find_all_exercises(req, res, next) {
     }
 
     if (req.query.filter && req.query.filter === "is_favorite") {
-      const filter_value = req.query.filter_values === "true";
+      const filter_value = req.query.filter_values[0] === "true";
 
       const found_exercises = await find_exercises_by_id_user_isFavorite(
         req.id_user,
@@ -225,17 +227,31 @@ async function find_all_exercises(req, res, next) {
  */
 async function find_exercises_of_routine(req, res, next) {
   try {
-    await find_routine_by_id_user_id_routine(
-      req.id_user,
-      req.params.id_routine
-    );
+    if (req.query.not_present) {
+      const found_routines =
+        await find_not_included_exercises_by_id_user_idRoutine(
+          req.id_user,
+          req.params.id_routine,
+          req.query.sort_by,
+          req.query.order,
+          req.query.filter,
+          req.query.filter_values
+        );
 
-    const found_routines = await find_exercise_by_id_user_idRoutine(
-      req.id_user,
-      req.params.id_routine
-    );
+      return return_response(res, 200, found_routines, true);
+    } else {
+      await find_routine_by_id_user_id_routine(
+        req.id_user,
+        req.params.id_routine
+      );
 
-    return return_response(res, 200, found_routines, true);
+      const found_routines = await find_exercises_by_id_user_idRoutine(
+        req.id_user,
+        req.params.id_routine
+      );
+
+      return return_response(res, 200, found_routines, true);
+    }
   } catch (error) {
     next(error);
   }
@@ -274,7 +290,7 @@ async function update_specific_exercise(req, res, next) {
       description: req.body.description
         ? req.body.description
         : found_exercise[0].description,
-      is_favorite: req.body.is_favorite
+      is_favorite: Object.keys(req.body).includes("is_favorite")
         ? req.body.is_favorite
         : found_exercise[0].is_favorite,
       intensity: req.body.intensity
@@ -390,6 +406,26 @@ async function delete_specific_exercise(req, res, next) {
   }
 }
 
+/**
+ * Controller that find the id of the last exercise created
+ *
+ * @param {Object} req - The request object from the HTTP request.
+ * @param {Object} res - The response object from the HTTP response.
+ * @param {Function} next - The next function in the middleware chain.
+ * @throws {CustomError} If something goes wrong with database
+ */
+async function find_id_exercise_of_last_exercise_created(req, res, next) {
+  try {
+    const found_id = await find_id_exercise_of_last_exercise_created_by_id_user(
+      req.id_user
+    );
+
+    return return_response(res, 200, found_id[0].max, true);
+  } catch (error) {
+    next(error);
+  }
+}
+
 //Exports
 
 module.exports = {
@@ -399,4 +435,5 @@ module.exports = {
   find_specific_exercise,
   update_specific_exercise,
   delete_specific_exercise,
+  find_id_exercise_of_last_exercise_created,
 };

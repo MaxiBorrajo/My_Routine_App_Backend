@@ -18,6 +18,7 @@ const {
   change_order_exercise_in_routine,
   delete_exercise_from_routine,
   delete_specific_routine,
+  find_id_routine_of_last_routine_created
 } = require("../controllers/routine_controller");
 
 const auth_middleware = require("../middlewares/auth_middleware");
@@ -71,6 +72,21 @@ router.get(
   auth_middleware,
   cache_middleware,
   find_routines
+);
+
+/**
+ * GET route to get the id_routine of the last routine created
+ *
+ * @route {GET} /v1/routine/last
+ *
+ * @throws {CustomError} - If something goes wrong with the database
+ */
+router.get(
+  "/last",
+  check_invalid_tokens_middleware,
+  auth_middleware,
+  cache_middleware,
+  find_id_routine_of_last_routine_created
 );
 
 /**
@@ -187,6 +203,8 @@ router.delete(
   auth_middleware,
   delete_specific_routine
 );
+
+
 
 //Exports
 

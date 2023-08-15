@@ -9,6 +9,7 @@ const {
   find_routines_by_id_user_id_day,
   find_routines_of_exercise_by_id_user_idExercise,
   update_routine,
+  find_id_routine_of_last_routine_created_by_id_user
 } = require("../repositories/routine_repository");
 
 const {
@@ -155,7 +156,7 @@ async function find_routines(req, res, next) {
     }
 
     if (req.query.filter && req.query.filter === "is_favorite") {
-      const filter_value = req.query.filter_values === "true";
+      const filter_value = req.query.filter_values[0] === "true";
 
       const found_routines = await find_routines_by_id_user_isFavorite(
         req.id_user,
@@ -233,10 +234,8 @@ async function update_specific_routine(req, res, next) {
       time_before_start: req.body.time_before_start
         ? req.body.time_before_start
         : found_routine[0].time_before_start,
-      description: req.body.description
-        ? req.body.description
-        : found_routine[0].description,
-      is_favorite: req.body.is_favorite
+      description: req.body.description,
+      is_favorite: Object.keys(req.body).includes('is_favorite')
         ? req.body.is_favorite
         : found_routine[0].is_favorite,
     };
@@ -490,6 +489,26 @@ async function delete_specific_routine(req, res, next) {
   }
 }
 
+/**
+ * Controller that find the id of the last routine created
+ *
+ * @param {Object} req - The request object from the HTTP request.
+ * @param {Object} res - The response object from the HTTP response.
+ * @param {Function} next - The next function in the middleware chain.
+ * @throws {CustomError} If something goes wrong with database
+ */
+async function find_id_routine_of_last_routine_created(req, res, next) {
+  try {
+    const found_id = await find_id_routine_of_last_routine_created_by_id_user(
+      req.id_user
+    );
+
+    return return_response(res, 200, found_id[0].max, true);
+  } catch (error) {
+    next(error);
+  }
+}
+
 //Exports 
 
 module.exports = {
@@ -502,4 +521,5 @@ module.exports = {
   change_order_exercise_in_routine,
   delete_exercise_from_routine,
   delete_specific_routine,
+  find_id_routine_of_last_routine_created
 };
