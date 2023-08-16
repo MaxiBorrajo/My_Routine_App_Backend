@@ -13,11 +13,7 @@ const default_options = {
     401: 0,
     403: 0,
     500: 0,
-  },
-  engine: require("expeditious-engine-redis")({
-    host: "127.0.0.2",
-    port: 6379,
-  }),
+  }
 };
 
 //Methods
