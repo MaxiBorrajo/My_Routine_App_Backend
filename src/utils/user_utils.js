@@ -135,6 +135,7 @@ async function get_authorization(user, res, next, is_from_google) {
       httpOnly: true,
       sameSite: "None",
       secure: true,
+      path:"/"
     });
 
     res.cookie("refresh_token", refresh_token, {
@@ -142,12 +143,14 @@ async function get_authorization(user, res, next, is_from_google) {
       httpOnly: true,
       sameSite: "None",
       secure: true,
+      path:"/"
     });
 
     res.cookie("is_logged_in", true, {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       sameSite: "None",
       secure: true,
+      path:"/"
     });
 
     delete user.password;
