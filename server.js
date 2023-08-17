@@ -39,7 +39,7 @@ const set_route = require("./src/routes/set_route");
 //Dependencies
 
 app.options("*", cors({
-  origin: "https://my-routine-app-frontend.vercel.app/",
+  origin: "https://my-routine-app-frontend.vercel.app",
   withCredentials: true
 }));
 
