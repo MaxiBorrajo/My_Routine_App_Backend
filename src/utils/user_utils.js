@@ -143,7 +143,7 @@ async function get_authorization(user, res, next, is_from_google) {
       httpOnly: true,
       sameSite: "None",
       secure: true,
-      path:"/"
+      path:"/",
     });
 
     res.cookie("is_logged_in", true, {

@@ -38,34 +38,12 @@ const set_route = require("./src/routes/set_route");
 
 //Dependencies
 
-app.options(
-  "*",
-  cors({
-    preflightContinue: true,
-    origin: "https://my-routine-app-frontend.vercel.app/",
-    credentials: true,
-    withCredentials: true,
-  })
-);
-
 app.use(
   cors({
-    preflightContinue: true,
-    origin: "https://my-routine-app-frontend.vercel.app/",
+    origin: true,
     credentials: true,
-    withCredentials: true,
   })
 );
-
-app.use((req, res, next) => {
-  res.header(
-    "Access-Control-Allow-Origin",
-    "https://my-routine-app-frontend.vercel.app"
-  );
-  res.header("Access-Control-Allow-Credentials", "true");
-  // Other CORS headers can be added here if needed
-  next();
-});
 
 app.use(express.json());
 
