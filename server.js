@@ -36,17 +36,24 @@ const photo_route = require("./src/routes/photo_route");
 
 const set_route = require("./src/routes/set_route");
 
+const allowed_origins = [
+  "http://localhost:5173",
+  "https://my-routine-app-frontend.vercel.app",
+]
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (allowed_origins.includes(origin) || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+};
 //Dependencies
 
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",
-      "https://my-routine-app-frontend.vercel.app",
-    ], // Reemplaza con el dominio de frontend
-    credentials: true,
-  })
-);
+app.use(cors(corsOptions));
 
 app.use(express.json());
 
