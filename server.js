@@ -38,10 +38,18 @@ const set_route = require("./src/routes/set_route");
 
 //Dependencies
 
-app.options("*", cors({
+app.options(
+  "*",
+  cors({
+    origin: "https://my-routine-app-frontend.vercel.app",
+    withCredentials: true,
+  })
+);
+
+app.use({
   origin: "https://my-routine-app-frontend.vercel.app",
-  withCredentials: true
-}));
+  withCredentials: true,
+});
 
 app.use(express.json());
 
