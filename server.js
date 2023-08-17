@@ -40,7 +40,10 @@ const set_route = require("./src/routes/set_route");
 
 app.use(
   cors({
-    origin: "http://localhost:5173", // Reemplaza con el dominio de frontend
+    origin: [
+      "http://localhost:5173",
+      "https://my-routine-app-backend.vercel.app",
+    ], // Reemplaza con el dominio de frontend
     credentials: true,
   })
 );
