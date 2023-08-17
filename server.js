@@ -39,6 +39,8 @@ const set_route = require("./src/routes/set_route");
 const allowed_origins = [
   "http://localhost:5173",
   "https://my-routine-app-frontend.vercel.app",
+  "https://my-routine-app-frontend-ab98o9xmd-maxiborrajo.vercel.app/",
+  "https://my-routine-app-frontend-git-main-maxiborrajo.vercel.app/"
 ]
 
 const corsOptions = {
