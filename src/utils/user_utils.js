@@ -133,18 +133,21 @@ async function get_authorization(user, res, next, is_from_google) {
     res.cookie("access_token", access_token, {
       maxAge: 120 * 1000,
       httpOnly: true,
-      sameSite: 'None'
+      sameSite: "None",
+      secure: true,
     });
 
     res.cookie("refresh_token", refresh_token, {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       httpOnly: true,
-      sameSite: 'None'
+      sameSite: "None",
+      secure: true,
     });
 
     res.cookie("is_logged_in", true, {
       maxAge: 7 * 24 * 60 * 60 * 1000,
-      sameSite: 'None'
+      sameSite: "None",
+      secure: true,
     });
 
     delete user.password;
@@ -153,10 +156,10 @@ async function get_authorization(user, res, next, is_from_google) {
 
     const status = are_equal(found_auth.length, 0) ? 201 : 200;
 
-    if(!is_from_google){
+    if (!is_from_google) {
       return return_response(res, status, user, true);
     }
-    res.redirect('http://localhost:5173/dashboard')
+    res.redirect("http://localhost:5173/dashboard");
   } catch (error) {
     next(error);
   }
