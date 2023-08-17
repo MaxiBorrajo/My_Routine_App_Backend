@@ -48,6 +48,25 @@ app.options(
   })
 );
 
+app.use(
+  cors({
+    preflightContinue: true,
+    origin: "https://my-routine-app-frontend.vercel.app/",
+    credentials: true,
+    withCredentials: true,
+  })
+);
+
+app.use((req, res, next) => {
+  res.header(
+    "Access-Control-Allow-Origin",
+    "https://my-routine-app-frontend.vercel.app"
+  );
+  res.header("Access-Control-Allow-Credentials", "true");
+  // Other CORS headers can be added here if needed
+  next();
+});
+
 app.use(express.json());
 
 app.use(express.urlencoded({ extended: false }));
@@ -91,16 +110,6 @@ app.use("/v1/muscle_group", muscle_group_route);
 app.use("/v1/photo", photo_route);
 
 app.use("/v1/set", set_route);
-
-app.use((req, res, next) => {
-  res.header(
-    "Access-Control-Allow-Origin",
-    "https://my-routine-app-frontend.vercel.app"
-  );
-  res.header("Access-Control-Allow-Credentials", "true");
-  // Other CORS headers can be added here if needed
-  next();
-});
 
 //Exports
 
