@@ -38,19 +38,6 @@ const set_route = require("./src/routes/set_route");
 
 //Dependencies
 
-app.options(
-  "*",
-  cors({
-    origin: "https://my-routine-app-frontend.vercel.app",
-    withCredentials: true,
-  })
-);
-
-app.use({
-  origin: "https://my-routine-app-frontend.vercel.app",
-  withCredentials: true,
-});
-
 app.use(express.json());
 
 app.use(express.urlencoded({ extended: false }));
@@ -75,6 +62,20 @@ app.use(helmet());
 
 app.use(xss());
 
+//Global middlewares
+
+app.use(error_handler_middleware);
+
+app.use((req, res, next) => {
+  res.header(
+    "Access-Control-Allow-Origin",
+    "https://my-routine-app-frontend.vercel.app"
+  );
+  res.header("Access-Control-Allow-Credentials", "true");
+  // Other CORS headers can be added here if needed
+  next();
+});
+
 //Routes
 
 app.use("/v1/user", user_route);
@@ -90,20 +91,6 @@ app.use("/v1/muscle_group", muscle_group_route);
 app.use("/v1/photo", photo_route);
 
 app.use("/v1/set", set_route);
-
-//Global middlewares
-
-app.use(error_handler_middleware);
-
-app.use((req, res, next) => {
-  res.header(
-    "Access-Control-Allow-Origin",
-    "https://my-routine-app-frontend.vercel.app"
-  );
-  res.header("Access-Control-Allow-Credentials", "true");
-  // Other CORS headers can be added here if needed
-  next();
-});
 
 //Exports
 
