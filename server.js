@@ -42,7 +42,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://my-routine-app-backend.vercel.app",
+      "https://my-routine-app-frontend-r9njjg891-maxiborrajo.vercel.app",
     ], // Reemplaza con el dominio de frontend
     credentials: true,
   })
