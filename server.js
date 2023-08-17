@@ -41,8 +41,10 @@ const set_route = require("./src/routes/set_route");
 app.options(
   "*",
   cors({
-    credentials: true,
+    preflightContinue: true,
     origin: "https://my-routine-app-frontend.vercel.app/",
+    credentials: true,
+    withCredentials: true,
   })
 );
 
