@@ -38,7 +38,9 @@ const set_route = require("./src/routes/set_route");
 
 //Dependencies
 
-app.use(cors());
+app.options("*", cors({
+  withCredentials: true
+}));
 
 app.use(express.json());
 
