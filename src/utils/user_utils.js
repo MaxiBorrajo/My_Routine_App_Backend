@@ -135,7 +135,8 @@ async function get_authorization(user, res, next, is_from_google) {
       httpOnly: true,
       sameSite: "none",
       secure: true,
-      path:"/"
+      path: "/",
+      domain: ".vercel.app",
     });
 
     res.cookie("refresh_token", refresh_token, {
@@ -143,14 +144,16 @@ async function get_authorization(user, res, next, is_from_google) {
       httpOnly: true,
       sameSite: "None",
       secure: true,
-      path:"/",
+      path: "/",
+      domain: ".vercel.app",
     });
 
     res.cookie("is_logged_in", true, {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       sameSite: "none",
       secure: true,
-      path:"/"
+      path: "/",
+      domain: ".vercel.app",
     });
 
     delete user.password;
