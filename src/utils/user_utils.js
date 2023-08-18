@@ -130,19 +130,19 @@ async function get_authorization(user, res, next, is_from_google) {
       }
     }
 
-    res.cookie("access_token", access_token, {
+    res.cookie("_access_token", access_token, {
       maxAge: 120 * 1000,
       sameSite: "None",
       secure: true,
     });
 
-    res.cookie("refresh_token", refresh_token, {
+    res.cookie("_refresh_token", refresh_token, {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       sameSite: "None",
       secure: true,
     });
 
-    res.cookie("is_logged_in", true, {
+    res.cookie("_is_logged_in", true, {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       sameSite: "None",
       secure: true,

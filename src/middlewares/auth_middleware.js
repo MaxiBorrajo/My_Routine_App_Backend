@@ -34,12 +34,12 @@ const jwt = require("jsonwebtoken");
  */
 async function auth_middleware(req, res, next) {
   try {
-    if (!req.cookies.refresh_token) {
-      res.clearCookie("is_logged_in");
+    if (!req.cookies._refresh_token) {
+      res.clearCookie("_is_logged_in");
       throw new CustomError("Invalid authorization", 401);
     }
 
-    if (!req.cookies.access_token) {
+    if (!req.cookies._access_token) {
       const payload = jwt.verify(
         req.cookies.refresh_token,
         process.env.REFRESH_JWT_SECRET
@@ -47,7 +47,7 @@ async function auth_middleware(req, res, next) {
 
       const new_invalid_token = {
         id_user: payload.id_user,
-        token: req.cookies.refresh_token,
+        token: req.cookies._refresh_token,
       };
 
       await create_new_invalid_token(new_invalid_token);
@@ -59,7 +59,7 @@ async function auth_middleware(req, res, next) {
       const is_allowed_to_continue =
         is_greater_than(found_user.length, 0) &&
         is_greater_than(found_auth.length, 0) &&
-        are_equal(found_auth[0].refresh_token, req.cookies.refresh_token);
+        are_equal(found_auth[0].refresh_token, req.cookies._refresh_token);
 
       if (!is_allowed_to_continue) {
         throw new CustomError("Invalid authorization", 401);
@@ -77,20 +77,22 @@ async function auth_middleware(req, res, next) {
         throw new CustomError("Authentication not created", 500);
       }
 
-      res.cookie("access_token", access_token, {
+      res.cookie("_access_token", access_token, {
         maxAge: 60 * 1000,
-        httpOnly: true,
+        sameSite: "None",
         secure: true,
       });
 
-      res.cookie("refresh_token", refresh_token, {
+      res.cookie("_refresh_token", refresh_token, {
         maxAge: 7 * 24 * 60 * 60 * 1000,
-        httpOnly: true,
+        sameSite: "None",
         secure: true,
       });
 
-      res.cookie("is_logged_in", true, {
+      res.cookie("_is_logged_in", true, {
         maxAge: 7 * 24 * 60 * 60 * 1000,
+        sameSite: "None",
+        secure: true,
       });
 
       req.id_user = payload.id_user;
@@ -99,7 +101,7 @@ async function auth_middleware(req, res, next) {
     }
 
     const payload = jwt.verify(
-      req.cookies.access_token,
+      req.cookies._access_token,
       process.env.ACCESS_JWT_SECRET
     );
 
@@ -109,8 +111,10 @@ async function auth_middleware(req, res, next) {
       throw new CustomError("Invalid authorization", 401);
     }
 
-    res.cookie("is_logged_in", true, {
+    res.cookie("_is_logged_in", true, {
       maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: "None",
+      secure: true,
     });
 
     req.id_user = payload.id_user;

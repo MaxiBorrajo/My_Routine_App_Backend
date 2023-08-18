@@ -38,14 +38,14 @@ async function is_token_repeated(token, next) {
  */
 async function check_invalid_tokens_middleware(req, res, next) {
   try {
-    const refresh_token = req.cookies.refresh_token;
+    const refresh_token = req.cookies._refresh_token;
 
-    const access_token = req.cookies.access_token;
+    const access_token = req.cookies._access_token;
 
     if (
-      (req.cookies.refresh_token &&
+      (req.cookies._refresh_token &&
         (await is_token_repeated(refresh_token, next))) ||
-      (req.cookies.access_token &&
+      (req.cookies._access_token &&
         (await is_token_repeated(access_token, next)))
     ) {
       throw new CustomError("Invalid token", 401);
