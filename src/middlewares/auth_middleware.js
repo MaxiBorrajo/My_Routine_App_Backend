@@ -81,18 +81,21 @@ async function auth_middleware(req, res, next) {
         maxAge: 60 * 1000,
         sameSite: "None",
         secure: true,
+        domain:"https://my-routine-app-frontend.vercel.app"
       });
 
       res.cookie("_refresh_token", refresh_token, {
         maxAge: 7 * 24 * 60 * 60 * 1000,
         sameSite: "None",
         secure: true,
+        domain:"https://my-routine-app-frontend.vercel.app"
       });
 
       res.cookie("_is_logged_in", true, {
         maxAge: 7 * 24 * 60 * 60 * 1000,
         sameSite: "None",
         secure: true,
+        domain:"https://my-routine-app-frontend.vercel.app"
       });
 
       req.id_user = payload.id_user;
@@ -115,6 +118,7 @@ async function auth_middleware(req, res, next) {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       sameSite: "None",
       secure: true,
+      domain:"https://my-routine-app-frontend.vercel.app"
     });
 
     req.id_user = payload.id_user;
