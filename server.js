@@ -45,6 +45,14 @@ app.use(
   })
 );
 
+app.use((req, res, next) => {
+  res.set({
+    "Access-Control-Allow-Origin": "*",
+  });
+
+  next();
+});
+
 app.use(express.json());
 
 app.use(express.urlencoded({ extended: false }));
