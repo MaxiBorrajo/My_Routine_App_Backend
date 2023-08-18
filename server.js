@@ -65,9 +65,9 @@ app.use(passport.initialize());
 
 app.use(passport.session());
 
-app.use(helmet());
+// app.use(helmet());
 
-app.use(xss());
+// app.use(xss());
 
 //Global middlewares
 
