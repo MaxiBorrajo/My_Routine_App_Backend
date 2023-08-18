@@ -47,7 +47,7 @@ app.use(
 
 app.use((req, res, next) => {
   res.set({
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": "https://my-routine-app-frontend.vercel.app/",
   });
 
   next();
