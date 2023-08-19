@@ -454,12 +454,12 @@ async function logout(req, res, next) {
   try {
     let new_invalid_token = {
       id_user: req.id_user,
-      token: req.cookies.access_token,
+      token: req.cookies._access_token,
     };
 
     await create_new_invalid_token(new_invalid_token);
 
-    new_invalid_token.token = req.cookies.refresh_token;
+    new_invalid_token.token = req.cookies._refresh_token;
 
     await create_new_invalid_token(new_invalid_token);
 
