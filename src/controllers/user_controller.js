@@ -468,11 +468,7 @@ async function logout(req, res, next) {
     const cookies = req.cookies;
 
     for (let cookieName in cookies) {
-      res.clearCookie(cookieName, {
-        path: "/",
-        httpOnly: true,
-        expires: new Date(0),
-      });
+      res.clearCookie(cookieName);
     }
 
     return return_response(
