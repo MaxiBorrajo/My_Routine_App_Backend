@@ -452,6 +452,8 @@ async function update_current_user(req, res, next) {
  */
 async function logout(req, res, next) {
   try {
+console.log(req.cookies)
+
     let new_invalid_token = {
       id_user: req.id_user,
       token: req.cookies._access_token,
