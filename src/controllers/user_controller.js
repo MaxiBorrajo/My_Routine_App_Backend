@@ -113,7 +113,7 @@ async function register(req, res, next) {
 
     let found_user = await find_user_by_email(email);
 
-    return get_authorization(found_user[0], res, next, false);
+    return get_authorization(found_user[0], req, res, next, false);
   } catch (error) {
     next(error);
   }
@@ -142,7 +142,7 @@ async function login(req, res, next) {
       throw new CustomError("Email or password are incorrect", 404);
     }
 
-    return get_authorization(found_user[0], res, next, false);
+    return get_authorization(found_user[0], req, res, next, false);
   } catch (error) {
     next(error);
   }
@@ -159,7 +159,7 @@ async function login(req, res, next) {
  */
 async function google_authentication(req, res, next) {
   try {
-    return get_authorization(req.user, res, next, true);
+    return get_authorization(req.user, req, res, next, true);
   } catch (error) {
     next(error);
   }
@@ -437,7 +437,7 @@ async function update_current_user(req, res, next) {
     if (req.file) {
       await delete_image_in_cloud(req.file.public_id);
     }
-    console.log(error)
+    console.log(error);
     next(error);
   }
 }
@@ -464,7 +464,7 @@ async function logout(req, res, next) {
     await create_new_invalid_token(new_invalid_token);
 
     const cookies = req.cookies;
-    
+
     for (let cookieName in cookies) {
       res.clearCookie(cookieName, {
         path: "/",

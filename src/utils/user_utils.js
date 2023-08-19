@@ -99,7 +99,7 @@ function get_reset_password_token(id_user) {
  * @throws {CustomError} If the user isn't found in database or if authentication
  * cannot be sent
  */
-async function get_authorization(user, res, next, is_from_google) {
+async function get_authorization(user, req, res, next, is_from_google) {
   try {
     const { access_token, refresh_token } = generate_tokens({
       id_user: user.id_user,
