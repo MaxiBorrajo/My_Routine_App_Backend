@@ -452,18 +452,18 @@ async function update_current_user(req, res, next) {
  */
 async function logout(req, res, next) {
   try {
-console.log(req.cookies)
+// console.log(req.cookies)
 
-    let new_invalid_token = {
-      id_user: req.id_user,
-      token: req.cookies._access_token,
-    };
+//     let new_invalid_token = {
+//       id_user: req.id_user,
+//       token: req.cookies._access_token,
+//     };
 
-    await create_new_invalid_token(new_invalid_token);
+//     await create_new_invalid_token(new_invalid_token);
 
-    new_invalid_token.token = req.cookies._refresh_token;
+//     new_invalid_token.token = req.cookies._refresh_token;
 
-    await create_new_invalid_token(new_invalid_token);
+//     await create_new_invalid_token(new_invalid_token);
 
     const cookies = req.cookies;
 
