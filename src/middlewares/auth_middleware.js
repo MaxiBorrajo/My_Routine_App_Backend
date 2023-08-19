@@ -77,6 +77,8 @@ async function auth_middleware(req, res, next) {
         throw new CustomError("Authentication not created", 500);
       }
 
+      const current_domain = req.get("Host");
+
       res.cookie("_access_token", access_token, {
         maxAge: 60 * 1000,
         sameSite: "None",
@@ -113,6 +115,8 @@ async function auth_middleware(req, res, next) {
     if (are_equal(found_user.length, 0)) {
       throw new CustomError("Invalid authorization", 401);
     }
+
+    const current_domain = req.get("Host");
 
     res.cookie("_is_logged_in", true, {
       maxAge: 7 * 24 * 60 * 60 * 1000,
