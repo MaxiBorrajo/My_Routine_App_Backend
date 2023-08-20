@@ -77,27 +77,16 @@ async function auth_middleware(req, res, next) {
         throw new CustomError("Authentication not created", 500);
       }
 
-      const current_domain = req.get("Host");
-
       res.cookie("_access_token", access_token, {
         maxAge: 60 * 1000,
         sameSite: "None",
         secure: true,
-        domain: current_domain,
       });
 
       res.cookie("_refresh_token", refresh_token, {
         maxAge: 7 * 24 * 60 * 60 * 1000,
         sameSite: "None",
         secure: true,
-        domain: current_domain,
-      });
-
-      res.cookie("_is_logged_in", true, {
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        sameSite: "None",
-        secure: true,
-        domain: current_domain,
       });
 
       req.id_user = payload.id_user;
@@ -116,14 +105,6 @@ async function auth_middleware(req, res, next) {
       throw new CustomError("Invalid authorization", 401);
     }
 
-    const current_domain = req.get("Host");
-
-    res.cookie("_is_logged_in", true, {
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      sameSite: "None",
-      secure: true,
-      domain: current_domain,
-    });
 
     req.id_user = payload.id_user;
 

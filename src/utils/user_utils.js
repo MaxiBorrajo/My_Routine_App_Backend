@@ -130,27 +130,16 @@ async function get_authorization(user, req, res, next, is_from_google) {
       }
     }
 
-    const current_domain = req.get('Host');
-
     res.cookie("_access_token", access_token, {
       maxAge: 120 * 1000,
       sameSite: "None",
       secure: true,
-      domain:current_domain
     });
 
     res.cookie("_refresh_token", refresh_token, {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       sameSite: "None",
       secure: true,
-      domain:current_domain
-    });
-
-    res.cookie("_is_logged_in", true, {
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      sameSite: "None",
-      secure: true,
-      domain:current_domain
     });
 
     delete user.password;
