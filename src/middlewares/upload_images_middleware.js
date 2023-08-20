@@ -13,18 +13,18 @@ cloudinary.config({
   secure: true,
 });
 
-const multer_storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "");
-  },
-  filename: function (req, file, cb) {
-    const unique_suffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const filename = file.fieldname + "-" + unique_suffix;
-    cb(null, filename);
-  },
-});
+// const multer_storage = multer.diskStorage({
+//   destination: function (req, file, cb) {
+//     cb(null, "");
+//   },
+//   filename: function (req, file, cb) {
+//     const unique_suffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+//     const filename = file.fieldname + "-" + unique_suffix;
+//     cb(null, filename);
+//   },
+// });
 
-const upload_multer = multer({ storage: multer_storage });
+const upload_multer = multer().single("image");
 
 /**
  * Delete an image file from local storage
@@ -107,7 +107,7 @@ async function process_image(req, res, next) {
 
     const cloud_info = await upload_image_to_cloud(req.file.path);
 
-    delete_image_from_localStorage(req.file.path);
+    // delete_image_from_localStorage(req.file.path);
 
     req.file.public_id = cloud_info.public_id;
 
