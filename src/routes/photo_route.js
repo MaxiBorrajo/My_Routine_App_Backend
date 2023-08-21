@@ -4,16 +4,17 @@ const express = require("express");
 
 const router = express.Router();
 
-const {cache_middleware} = require("../middlewares/cache_middleware");
+const { cache_middleware } = require("../middlewares/cache_middleware");
 
 const {
   create_photo,
   find_all_photos_of_exercise,
-  delete_photo_associated_to_exercise
+  delete_photo_associated_to_exercise,
 } = require("../controllers/photo_controller");
 
 const {
   process_image,
+  multer_uploads,
 } = require("../middlewares/upload_images_middleware");
 
 const auth_middleware = require("../middlewares/auth_middleware");
@@ -32,9 +33,10 @@ const check_invalid_tokens_middleware = require("../middlewares/invalid_token_mi
  */
 router.post(
   "/exercise/:id_exercise",
-  process_image,
   check_invalid_tokens_middleware,
   auth_middleware,
+  multer_uploads,
+  process_image,
   create_photo
 );
 
@@ -64,10 +66,10 @@ router.get(
  * if something goes wrong with the database
  */
 router.delete(
-    "/:public_id/exercise/:id_exercise",
-    check_invalid_tokens_middleware,
-    auth_middleware,
-    delete_photo_associated_to_exercise
-  );
+  "/:public_id/exercise/:id_exercise",
+  check_invalid_tokens_middleware,
+  auth_middleware,
+  delete_photo_associated_to_exercise
+);
 
 module.exports = router;

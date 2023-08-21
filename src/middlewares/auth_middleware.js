@@ -41,7 +41,7 @@ async function auth_middleware(req, res, next) {
 
     if (!req.cookies._access_token) {
       const payload = jwt.verify(
-        req.cookies.refresh_token,
+        req.cookies._refresh_token,
         process.env.REFRESH_JWT_SECRET
       );
 

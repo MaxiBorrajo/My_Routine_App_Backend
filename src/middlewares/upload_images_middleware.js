@@ -3,6 +3,7 @@
 const fs = require("fs");
 const multer = require("multer");
 const cloudinary = require("cloudinary");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
 //Methods
 
@@ -15,7 +16,7 @@ cloudinary.config({
 
 const storage = multer.memoryStorage();
 
-const upload = multer({ storage });
+const multer_uploads = multer({ storage }).single("image");
 
 // const upload_multer = upload.single("image");
 
@@ -106,7 +107,6 @@ async function delete_image_in_cloud(public_id) {
  */
 async function process_image(req, res, next) {
   try {
-    // await run_middleware(req, res, upload_multer);
 
     if (!req.file) {
       return next();
@@ -119,7 +119,7 @@ async function process_image(req, res, next) {
     const cloud_info = await upload_image_to_cloud(data_URI);
 
     req.file.public_id = cloud_info.public_id;
-    
+
     req.file.url = cloud_info.url;
 
     return next();
@@ -132,7 +132,7 @@ async function process_image(req, res, next) {
 //Exports
 
 module.exports = {
-  upload,
+  multer_uploads,
   process_image,
   delete_image_in_cloud,
   upload_image_to_cloud,

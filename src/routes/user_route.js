@@ -21,13 +21,12 @@ const {
   logout,
   send_feedback,
   delete_user,
-  is_logged_in
+  is_logged_in,
 } = require("../controllers/user_controller");
 
 const {
-  upload_multer,
   process_image,
-  upload,
+  multer_uploads,
 } = require("../middlewares/upload_images_middleware");
 
 const auth_middleware = require("../middlewares/auth_middleware");
@@ -115,7 +114,7 @@ router.get(
   "/google/redirect",
   passport.authenticate("google"),
   cache_middleware,
-  google_authentication,
+  google_authentication
 );
 
 /**
@@ -204,11 +203,14 @@ router.put(
   "/",
   check_invalid_tokens_middleware,
   auth_middleware,
-  upload.single("image"),
+  multer_uploads,
   process_image,
   validate_fields_middleware.body_must_not_contain_attributes(["password"]),
   update_current_user
 );
+
+// validate_fields_middleware.body_must_not_contain_attributes(["password"]),
+//   update_current_user
 
 /**
  * Deletes authorization of the current user
@@ -217,10 +219,7 @@ router.put(
  *
  * @throws {CustomError} - If something goes wrong with the database
  */
-router.delete(
-  "/credentials",
-  logout
-);
+router.delete("/credentials", logout);
 
 /**
  * Posts feedback about the app
