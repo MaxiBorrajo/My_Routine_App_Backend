@@ -367,10 +367,6 @@ async function is_logged_in(req, res, next) {
  */
 async function update_current_user(req, res, next) {
   try {
-    if (are_equal(Object.keys(req.body).length, 0)) {
-      throw new CustomError("You must update, at least, one attribute", 400);
-    }
-
     const found_user = await find_user_by_id_user(req.id_user);
 
     if (are_equal(found_user.length, 0)) {
