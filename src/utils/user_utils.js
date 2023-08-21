@@ -134,12 +134,14 @@ async function get_authorization(user, req, res, next, is_from_google) {
       maxAge: 120 * 1000,
       sameSite: "None",
       secure: true,
+      path: "/",
     });
 
     res.cookie("_refresh_token", refresh_token, {
       maxAge: 7 * 24 * 60 * 60 * 1000,
       sameSite: "None",
       secure: true,
+      path: "/",
     });
 
     delete user.password;
