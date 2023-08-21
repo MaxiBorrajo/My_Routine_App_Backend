@@ -209,9 +209,6 @@ router.put(
   update_current_user
 );
 
-// validate_fields_middleware.body_must_not_contain_attributes(["password"]),
-//   update_current_user
-
 /**
  * Deletes authorization of the current user
  *
