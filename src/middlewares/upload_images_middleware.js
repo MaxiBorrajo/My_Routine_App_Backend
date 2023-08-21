@@ -40,10 +40,11 @@ function delete_image_from_localStorage(filepath) {
  * the public_id and url of the uploaded image
  * @throws {Error} If there was an error during the upload process
  */
-async function upload_image_to_cloud(filepath) {
+async function upload_image_to_cloud(file) {
   //check
   try {
-    const uploaded_image = await cloudinary.v2.uploader.upload(filepath, {
+    const uploaded_image = await cloudinary.v2.uploader.upload(file, {
+      resource_type: "auto",
       transformation: [
         {
           width: 300,
@@ -84,6 +85,17 @@ async function delete_image_in_cloud(public_id) {
   }
 }
 
+function run_middleware(req, res, fn) {
+  return new Promise((resolve, reject) => {
+    fn(req, res, (result) => {
+      if (result instanceof Error) {
+        return reject(result);
+      }
+      return resolve(result);
+    });
+  });
+}
+
 /**
  * Process the image file, including resizing, uploading to the cloud, and updating the request object
  * @param {Object} req - The request object from the HTTP request
@@ -94,24 +106,23 @@ async function delete_image_in_cloud(public_id) {
  */
 async function process_image(req, res, next) {
   try {
-    upload_multer(req, res, async function (err) {
-      if (err instanceof multer.MulterError) {
-        return next(err);
-      } else if (err) {
-        return next(err);
-      }
+    await run_middleware(req, res, upload_multer);
 
-      if (!req.file) {
-        return next();
-      }
-
-      const cloud_info = await upload_image_to_cloud(req.file.buffer); // Utiliza req.file.buffer en lugar de req.file.path
-
-      req.file.public_id = cloud_info.public_id;
-      req.file.url = cloud_info.url;
-
+    if (!req.file) {
       return next();
-    });
+    }
+
+    const b64 = Buffer.from(req.file.buffer).toString("base64");
+
+    let data_URI = "data:" + req.file.mimetype + ";base64," + b64;
+
+    const cloud_info = await upload_image_to_cloud(data_URI);
+
+    req.file.public_id = cloud_info.public_id;
+    
+    req.file.url = cloud_info.url;
+
+    return next();
   } catch (error) {
     console.log(error);
     return next(error);
