@@ -35,8 +35,6 @@ const check_invalid_tokens_middleware = require("../middlewares/invalid_token_mi
 
 require("../middlewares/auth_google");
 
-const axios = require('axios');
-
 //Routes
 
 /**
