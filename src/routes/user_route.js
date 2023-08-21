@@ -216,7 +216,12 @@ router.put(
  *
  * @throws {CustomError} - If something goes wrong with the database
  */
-router.delete("/credentials", logout);
+router.delete(
+  "/credentials",
+  check_invalid_tokens_middleware,
+  auth_middleware,
+  logout
+);
 
 /**
  * Posts feedback about the app
