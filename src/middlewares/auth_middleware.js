@@ -89,6 +89,7 @@ async function auth_middleware(req, res, next) {
         sameSite: "None",
         secure: true,
         path: "/",
+        domain: '.my-routine-app-backend.vercel.app	'
       });
 
       res.cookie("_refresh_token", refresh_token, {
@@ -96,6 +97,7 @@ async function auth_middleware(req, res, next) {
         sameSite: "None",
         secure: true,
         path: "/",
+        domain: '.my-routine-app-backend.vercel.app	'
       });
 
       req.id_user = payload.id_user;
