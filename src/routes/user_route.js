@@ -218,8 +218,6 @@ router.put(
  */
 router.delete(
   "/credentials",
-  check_invalid_tokens_middleware,
-  auth_middleware,
   logout
 );
 
