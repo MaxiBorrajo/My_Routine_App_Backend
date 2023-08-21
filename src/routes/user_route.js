@@ -203,7 +203,6 @@ router.put(
   "/",
   check_invalid_tokens_middleware,
   auth_middleware,
-  upload_multer,
   process_image,
   validate_fields_middleware.body_must_not_contain_attributes(["password"]),
   update_current_user

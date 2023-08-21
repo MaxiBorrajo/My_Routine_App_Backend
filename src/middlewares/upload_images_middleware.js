@@ -101,19 +101,24 @@ async function delete_image_in_cloud(public_id) {
  */
 async function process_image(req, res, next) {
   try {
-    if (!req.file) {
+    upload_multer(req, res, async function (err) {
+      if (err instanceof multer.MulterError) {
+        return next(err);
+      } else if (err) {
+        return next(err);
+      }
+
+      if (!req.file) {
+        return next();
+      }
+
+      const cloud_info = await upload_image_to_cloud(req.file.buffer); // Utiliza req.file.buffer en lugar de req.file.path
+
+      req.file.public_id = cloud_info.public_id;
+      req.file.url = cloud_info.url;
+
       return next();
-    }
-
-    const cloud_info = await upload_image_to_cloud(req.file.path);
-
-    // delete_image_from_localStorage(req.file.path);
-
-    req.file.public_id = cloud_info.public_id;
-
-    req.file.url = cloud_info.url;
-
-    return next();
+    });
   } catch (error) {
     console.log(error);
     return next(error);
@@ -123,7 +128,6 @@ async function process_image(req, res, next) {
 //Exports
 
 module.exports = {
-  upload_multer,
   process_image,
   delete_image_in_cloud,
   upload_image_to_cloud,

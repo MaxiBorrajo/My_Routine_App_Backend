@@ -13,7 +13,6 @@ const {
 } = require("../controllers/photo_controller");
 
 const {
-  upload_multer,
   process_image,
 } = require("../middlewares/upload_images_middleware");
 
@@ -33,7 +32,6 @@ const check_invalid_tokens_middleware = require("../middlewares/invalid_token_mi
  */
 router.post(
   "/exercise/:id_exercise",
-  upload_multer,
   process_image,
   check_invalid_tokens_middleware,
   auth_middleware,
