@@ -17,7 +17,7 @@ const storage = multer.memoryStorage();
 
 const upload = multer({ storage });
 
-const upload_multer = upload.single("image");
+// const upload_multer = upload.single("image");
 
 /**
  * Delete an image file from local storage
@@ -85,16 +85,16 @@ async function delete_image_in_cloud(public_id) {
   }
 }
 
-function run_middleware(req, res, fn) {
-  return new Promise((resolve, reject) => {
-    fn(req, res, (result) => {
-      if (result instanceof Error) {
-        return reject(result);
-      }
-      return resolve(result);
-    });
-  });
-}
+// function run_middleware(req, res, fn) {
+//   return new Promise((resolve, reject) => {
+//     fn(req, res, (result) => {
+//       if (result instanceof Error) {
+//         return reject(result);
+//       }
+//       return resolve(result);
+//     });
+//   });
+// }
 
 /**
  * Process the image file, including resizing, uploading to the cloud, and updating the request object
@@ -106,7 +106,7 @@ function run_middleware(req, res, fn) {
  */
 async function process_image(req, res, next) {
   try {
-    await run_middleware(req, res, upload_multer);
+    // await run_middleware(req, res, upload_multer);
 
     if (!req.file) {
       return next();
@@ -132,6 +132,7 @@ async function process_image(req, res, next) {
 //Exports
 
 module.exports = {
+  upload,
   process_image,
   delete_image_in_cloud,
   upload_image_to_cloud,

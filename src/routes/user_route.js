@@ -27,6 +27,7 @@ const {
 const {
   upload_multer,
   process_image,
+  upload,
 } = require("../middlewares/upload_images_middleware");
 
 const auth_middleware = require("../middlewares/auth_middleware");
@@ -203,6 +204,7 @@ router.put(
   "/",
   check_invalid_tokens_middleware,
   auth_middleware,
+  upload.single("image"),
   process_image,
   validate_fields_middleware.body_must_not_contain_attributes(["password"]),
   update_current_user
