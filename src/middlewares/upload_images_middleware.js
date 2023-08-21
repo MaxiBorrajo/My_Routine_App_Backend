@@ -13,18 +13,11 @@ cloudinary.config({
   secure: true,
 });
 
-// const multer_storage = multer.diskStorage({
-//   destination: function (req, file, cb) {
-//     cb(null, "");
-//   },
-//   filename: function (req, file, cb) {
-//     const unique_suffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-//     const filename = file.fieldname + "-" + unique_suffix;
-//     cb(null, filename);
-//   },
-// });
+const storage = multer.memoryStorage();
 
-const upload_multer = multer().single("image");
+const upload = multer({ storage });
+
+const upload_multer = upload.single("image");
 
 /**
  * Delete an image file from local storage
