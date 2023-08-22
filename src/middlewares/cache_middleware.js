@@ -1,25 +1,29 @@
 //Imports
 
-const getExpeditiousCache = require("express-expeditious");
+const NodeCache = require("node-cache");
 
 //Variables
 
-const default_options = {
-  namespace: "expresscache",
-  defaultTtl: "1 minute",
-  statusCodeExpires: {
-    404: 0,
-    400: 0,
-    401: 0,
-    403: 0,
-    500: 0,
-  }
-};
-
-//Methods
-
-const cache_middleware = getExpeditiousCache(default_options);
+const cache = new NodeCache();
 
 //Exports
 
-module.exports = { cache_middleware };
+module.exports = (duration) => (req, res, next) => {
+  const key = req.originalUrl;
+
+  const cached_response = cache.get(key);
+
+  if (cached_response) {
+    res.send(cached_response);
+  } else {
+    res.originalSend = res.send;
+
+    res.send = (body) => {
+      res.originalSend(body);
+      
+      cache.set(key, body, duration);
+    };
+
+    next();
+  }
+};

@@ -3,7 +3,6 @@
 const fs = require("fs");
 const multer = require("multer");
 const cloudinary = require("cloudinary");
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
 //Methods
 

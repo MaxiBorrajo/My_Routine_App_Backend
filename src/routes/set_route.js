@@ -6,7 +6,7 @@ const router = express.Router();
 
 const validate_fields_middleware = require("../middlewares/validate_fields_middleware");
 
-const { cache_middleware } = require("../middlewares/cache_middleware");
+const cache = require("../middlewares/cache_middleware");
 
 const {
   create_set,
@@ -88,7 +88,7 @@ router.get(
   "/exercise/:id_exercise",
   check_invalid_tokens_middleware,
   auth_middleware,
-  cache_middleware,
+  cache(300),
   find_all_sets_of_exercise
 );
 
