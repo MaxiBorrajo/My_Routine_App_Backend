@@ -4,15 +4,16 @@ const express = require("express");
 
 const router = express.Router();
 
-const validate_fields_middleware = require("../middlewares/validate_fields_middleware");
+const {cache_middleware} = require("../middlewares/cache_middleware");
 
-const cache = require("../middlewares/cache_middleware");
+const validate_fields_middleware = require("../middlewares/validate_fields_middleware");
 
 const {
   create_set,
   update_specific_set,
   find_all_sets_of_exercise,
   delete_specific_exercise,
+  find_id_set_of_last_set_created
 } = require("../controllers/set_controller");
 
 const auth_middleware = require("../middlewares/auth_middleware");
@@ -54,6 +55,20 @@ router.post(
 );
 
 /**
+ * GET route to get the id_set of the last set created
+ *
+ * @route {GET} /v1/set/last
+ *
+ * @throws {CustomError} - If something goes wrong with the database
+ */
+router.get(
+  "/last",
+  check_invalid_tokens_middleware,
+  auth_middleware,
+  find_id_set_of_last_set_created
+);
+
+/**
  * PUT route to update a specific set
  *
  * @route {PUT} /v1/set/:id_set/exercise/:id_exercise
@@ -88,7 +103,7 @@ router.get(
   "/exercise/:id_exercise",
   check_invalid_tokens_middleware,
   auth_middleware,
-  cache(300),
+  cache_middleware,
   find_all_sets_of_exercise
 );
 

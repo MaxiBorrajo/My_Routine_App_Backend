@@ -1,4 +1,5 @@
 //Imports
+const redis = require("../config/redis_connection");
 
 const {
   create_new_exercise,
@@ -20,10 +21,12 @@ const {
 
 const {
   delete_time_set_by_id_user_id_exercise,
+  find_amount_time_sets_by_id_exercise_id_user,
 } = require("../repositories/time_set_repository");
 
 const {
   delete_repetition_sets_by_id_user_id_exercise,
+  find_amount_repetition_sets_by_id_exercise_id_user,
 } = require("../repositories/repetition_set_repository");
 
 const {
@@ -32,6 +35,7 @@ const {
 
 const {
   delete_works_by_id_user_id_exercise,
+  find_amount_muscle_groups_by_id_exercise_id_user,
 } = require("../repositories/works_repository");
 
 const {
@@ -41,6 +45,7 @@ const {
 
 const {
   delete_composed_by_by_id_user_id_exercise,
+  find_amount_routines_by_id_exercise_id_user,
 } = require("../repositories/composed_by_repository");
 
 const {
@@ -103,6 +108,8 @@ async function create_exercise(req, res, next) {
  */
 async function find_all_exercises(req, res, next) {
   try {
+    const key = req.originalUrl;
+
     for (let query in req.query) {
       if (Array.isArray(req.query[query]) && query !== "filter_values") {
         throw new CustomError(
@@ -175,6 +182,14 @@ async function find_all_exercises(req, res, next) {
         req.query.order
       );
 
+      if (found_exercises.length > 0) {
+        const list = found_exercises.map((obj) => JSON.stringify(obj));
+
+        await redis.lpush(key, list);
+
+        await redis.expire(key, 1);
+      }
+
       return return_response(res, 200, found_exercises, true);
     }
 
@@ -187,6 +202,14 @@ async function find_all_exercises(req, res, next) {
         req.query.sort_by,
         req.query.order
       );
+
+      if (found_exercises.length > 0) {
+        const list = found_exercises.map((obj) => JSON.stringify(obj));
+
+        await redis.lpush(key, list);
+
+        await redis.expire(key, 1);
+      }
 
       return return_response(res, 200, found_exercises, true);
     }
@@ -201,6 +224,14 @@ async function find_all_exercises(req, res, next) {
         req.query.order
       );
 
+      if (found_exercises.length > 0) {
+        const list = found_exercises.map((obj) => JSON.stringify(obj));
+
+        await redis.lpush(key, list);
+
+        await redis.expire(key, 1);
+      }
+
       return return_response(res, 200, found_exercises, true);
     }
 
@@ -209,6 +240,14 @@ async function find_all_exercises(req, res, next) {
       req.query.sort_by,
       req.query.order
     );
+
+    if (found_exercises.length > 0) {
+      const list = found_exercises.map((obj) => JSON.stringify(obj));
+
+      await redis.lpush(key, list);
+
+      await redis.expire(key, 1);
+    }
 
     return return_response(res, 200, found_exercises, true);
   } catch (error) {
@@ -227,6 +266,8 @@ async function find_all_exercises(req, res, next) {
  */
 async function find_exercises_of_routine(req, res, next) {
   try {
+    const key = req.originalUrl;
+
     if (req.query.not_present) {
       const found_routines =
         await find_not_included_exercises_by_id_user_idRoutine(
@@ -237,6 +278,14 @@ async function find_exercises_of_routine(req, res, next) {
           req.query.filter,
           req.query.filter_values
         );
+
+      if (found_routines.length > 0) {
+        const list = found_routines.map((obj) => JSON.stringify(obj));
+
+        await redis.lpush(key, list);
+
+        await redis.expire(key, 1);
+      }
 
       return return_response(res, 200, found_routines, true);
     } else {
@@ -249,6 +298,14 @@ async function find_exercises_of_routine(req, res, next) {
         req.id_user,
         req.params.id_routine
       );
+
+      if (found_routines.length > 0) {
+        const list = found_routines.map((obj) => JSON.stringify(obj));
+
+        await redis.lpush(key, list);
+
+        await redis.expire(key, 1);
+      }
 
       return return_response(res, 200, found_routines, true);
     }
@@ -325,6 +382,10 @@ async function find_specific_exercise(req, res, next) {
       req.id_user,
       req.params.id_exercise
     );
+
+    const key = req.originalUrl;
+
+    await redis.set(key, JSON.stringify(found_exercise[0]), "EX", 1);
 
     return return_response(res, 200, found_exercise[0], true);
   } catch (error) {
@@ -426,6 +487,107 @@ async function find_id_exercise_of_last_exercise_created(req, res, next) {
   }
 }
 
+/**
+ * Controller that find amount of repetition sets of an exercise
+ *
+ * @param {Object} req - The request object from the HTTP request.
+ * @param {Object} res - The response object from the HTTP response.
+ * @param {Function} next - The next function in the middleware chain.
+ * @throws {CustomError} If something goes wrong with database
+ */
+async function find_amount_repetition_sets_of_exercise(req, res, next) {
+  try {
+    const found_amount =
+      await find_amount_repetition_sets_by_id_exercise_id_user(
+        req.id_user,
+        req.params.id_exercise
+      );
+
+    const key = req.originalUrl;
+
+    await redis.set(key, JSON.stringify(found_amount[0].count), "EX", 1);
+
+    return return_response(res, 200, found_amount[0].count, true);
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Controller that find amount of time sets of an exercise
+ *
+ * @param {Object} req - The request object from the HTTP request.
+ * @param {Object} res - The response object from the HTTP response.
+ * @param {Function} next - The next function in the middleware chain.
+ * @throws {CustomError} If something goes wrong with database
+ */
+async function find_amount_time_sets_of_exercise(req, res, next) {
+  try {
+    const found_amount = await find_amount_time_sets_by_id_exercise_id_user(
+      req.id_user,
+      req.params.id_exercise
+    );
+
+    const key = req.originalUrl;
+
+    await redis.set(key, JSON.stringify(found_amount[0].count), "EX", 1);
+
+    return return_response(res, 200, found_amount[0].count, true);
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Controller that find amount of muscle groups of an exercise
+ *
+ * @param {Object} req - The request object from the HTTP request.
+ * @param {Object} res - The response object from the HTTP response.
+ * @param {Function} next - The next function in the middleware chain.
+ * @throws {CustomError} If something goes wrong with database
+ */
+async function find_amount_muscle_groups_of_exercise(req, res, next) {
+  try {
+    const found_amount = await find_amount_muscle_groups_by_id_exercise_id_user(
+      req.id_user,
+      req.params.id_exercise
+    );
+
+    const key = req.originalUrl;
+
+    await redis.set(key, JSON.stringify(found_amount[0].count), "EX", 1);
+
+    return return_response(res, 200, found_amount[0].count, true);
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Controller that find amount of routines of an exercise
+ *
+ * @param {Object} req - The request object from the HTTP request.
+ * @param {Object} res - The response object from the HTTP response.
+ * @param {Function} next - The next function in the middleware chain.
+ * @throws {CustomError} If something goes wrong with database
+ */
+async function find_amount_routines_of_exercise(req, res, next) {
+  try {
+    const found_amount = await find_amount_routines_by_id_exercise_id_user(
+      req.id_user,
+      req.params.id_exercise
+    );
+
+    const key = req.originalUrl;
+
+    await redis.set(key, JSON.stringify(found_amount[0].count), "EX", 1);
+
+    return return_response(res, 200, found_amount[0].count, true);
+  } catch (error) {
+    next(error);
+  }
+}
+
 //Exports
 
 module.exports = {
@@ -436,4 +598,8 @@ module.exports = {
   update_specific_exercise,
   delete_specific_exercise,
   find_id_exercise_of_last_exercise_created,
+  find_amount_muscle_groups_of_exercise,
+  find_amount_time_sets_of_exercise,
+  find_amount_repetition_sets_of_exercise,
+  find_amount_routines_of_exercise,
 };

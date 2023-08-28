@@ -14,6 +14,8 @@ const { return_response } = require("../utils/utils_functions");
  */
 function error_handler_middleware(err, req, res, next) {
 
+  console.log(err)
+
   const message = {
     message: `Something went wrong. Error: ${err.message}` || "Unknown error",
   };

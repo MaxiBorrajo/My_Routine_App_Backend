@@ -4,9 +4,9 @@ const express = require("express");
 
 const router = express.Router();
 
-const validate_fields_middleware = require("../middlewares/validate_fields_middleware");
+const {cache_middleware} = require("../middlewares/cache_middleware");
 
-const cache = require("../middlewares/cache_middleware");
+const validate_fields_middleware = require("../middlewares/validate_fields_middleware");
 
 const {
   create_exercise,
@@ -16,6 +16,10 @@ const {
   find_specific_exercise,
   delete_specific_exercise,
   find_id_exercise_of_last_exercise_created,
+  find_amount_muscle_groups_of_exercise,
+  find_amount_time_sets_of_exercise,
+  find_amount_repetition_sets_of_exercise,
+  find_amount_routines_of_exercise
 } = require("../controllers/exercise_controller");
 
 const auth_middleware = require("../middlewares/auth_middleware");
@@ -71,7 +75,7 @@ router.get(
   "/",
   check_invalid_tokens_middleware,
   auth_middleware,
-  cache(300),
+  cache_middleware,
   find_all_exercises
 );
 
@@ -86,7 +90,7 @@ router.get(
   "/last",
   check_invalid_tokens_middleware,
   auth_middleware,
-  cache(300),
+  cache_middleware,
   find_id_exercise_of_last_exercise_created
 );
 
@@ -113,7 +117,7 @@ router.get(
   "/routine/:id_routine",
   check_invalid_tokens_middleware,
   auth_middleware,
-  cache(300),
+  cache_middleware,
   find_exercises_of_routine
 );
 
@@ -128,8 +132,68 @@ router.get(
   "/:id_exercise",
   check_invalid_tokens_middleware,
   auth_middleware,
-  cache(300),
+  cache_middleware,
   find_specific_exercise
+);
+
+/**
+ * GET route to find amount of time sets of an exercise
+ *
+ * @route {GET} /v1/exercise/:id_exercise/amount/time_set
+ *
+ * @throws {CustomError} - If the exercise isn't found or if something goes wrong with the database
+ */
+router.get(
+  "/:id_exercise/amount/time_set",
+  check_invalid_tokens_middleware,
+  auth_middleware,
+  cache_middleware,
+  find_amount_time_sets_of_exercise
+);
+
+/**
+ * GET route to find amount of repetition sets of an exercise
+ *
+ * @route {GET} /v1/exercise/:id_exercise/amount/repetition_set
+ *
+ * @throws {CustomError} - If the exercise isn't found or if something goes wrong with the database
+ */
+router.get(
+  "/:id_exercise/amount/repetition_set",
+  check_invalid_tokens_middleware,
+  auth_middleware,
+  cache_middleware,
+  find_amount_repetition_sets_of_exercise
+);
+
+/**
+ * GET route to find amount of muscle groups assigned to an exercise
+ *
+ * @route {GET} /v1/exercise/:id_exercise/amount/muscle_group
+ *
+ * @throws {CustomError} - If the exercise isn't found or if something goes wrong with the database
+ */
+router.get(
+  "/:id_exercise/amount/muscle_group",
+  check_invalid_tokens_middleware,
+  auth_middleware,
+  cache_middleware,
+  find_amount_muscle_groups_of_exercise
+);
+
+/**
+ * GET route to find amount of routines of an exercise
+ *
+ * @route {GET} /v1/exercise/:id_exercise/amount/routines
+ *
+ * @throws {CustomError} - If the exercise isn't found or if something goes wrong with the database
+ */
+router.get(
+  "/:id_exercise/amount/routines",
+  check_invalid_tokens_middleware,
+  auth_middleware,
+  cache_middleware,
+  find_amount_routines_of_exercise
 );
 
 /**

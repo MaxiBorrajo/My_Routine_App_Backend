@@ -1,4 +1,5 @@
 //Imports
+const redis = require("../config/redis_connection");
 
 const {
   get_all_days,
@@ -37,6 +38,14 @@ const {
 async function find_all_days(req, res, next) {
   try {
     const found_days = await get_all_days();
+
+    const key = req.originalUrl;
+
+    if (found_days.length > 0) {
+      const list = found_days.map((obj) => JSON.stringify(obj));
+
+      await redis.lpush(key, list);
+    }
 
     return return_response(res, 200, found_days, true);
   } catch (error) {
@@ -113,6 +122,16 @@ async function find_days_assign_to_a_routine(req, res, next) {
       req.id_user,
       req.params.id_routine
     );
+
+    const key = req.originalUrl;
+
+    if (found_days.length > 0) {
+      const list = found_days.map((obj) => JSON.stringify(obj));
+
+      await redis.lpush(key, list);
+
+      await redis.expire(key, 1);
+    }
 
     return return_response(res, 200, found_days, true);
   } catch (error) {

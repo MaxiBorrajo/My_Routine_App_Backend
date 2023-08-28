@@ -4,9 +4,9 @@ const express = require("express");
 
 const router = express.Router();
 
-const validate_fields_middleware = require("../middlewares/validate_fields_middleware");
+const {cache_middleware} = require("../middlewares/cache_middleware");
 
-const cache = require("../middlewares/cache_middleware");
+const validate_fields_middleware = require("../middlewares/validate_fields_middleware");
 
 const {
   create_routine,
@@ -18,7 +18,8 @@ const {
   change_order_exercise_in_routine,
   delete_exercise_from_routine,
   delete_specific_routine,
-  find_id_routine_of_last_routine_created
+  find_id_routine_of_last_routine_created,
+  find_amount_exercises_of_routine
 } = require("../controllers/routine_controller");
 
 const auth_middleware = require("../middlewares/auth_middleware");
@@ -70,7 +71,7 @@ router.get(
   "/",
   check_invalid_tokens_middleware,
   auth_middleware,
-  cache(300),
+  cache_middleware,
   find_routines
 );
 
@@ -85,9 +86,10 @@ router.get(
   "/last",
   check_invalid_tokens_middleware,
   auth_middleware,
-  cache(300),
+  cache_middleware,
   find_id_routine_of_last_routine_created
 );
+
 
 /**
  * GET route to find a specific routine
@@ -100,8 +102,23 @@ router.get(
   "/:id_routine",
   check_invalid_tokens_middleware,
   auth_middleware,
-  cache(300),
+  cache_middleware,
   find_specific_routine
+);
+
+/**
+ * GET route to find amount exercises of routine
+ *
+ * @route {GET} /v1/routine/:id_routine/amount/exercises
+ *
+ * @throws {CustomError} - If the routine isn't found or if something goes wrong with the database
+ */
+router.get(
+  "/:id_routine/amount/exercises",
+  check_invalid_tokens_middleware,
+  auth_middleware,
+  cache_middleware,
+  find_amount_exercises_of_routine
 );
 
 /**
@@ -154,7 +171,7 @@ router.get(
   "/exercise/:id_exercise",
   check_invalid_tokens_middleware,
   auth_middleware,
-  cache(300),
+  cache_middleware,
   find_routines_of_exercise
 );
 

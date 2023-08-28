@@ -24,7 +24,7 @@ const { are_equal } = require("../utils/utils_functions");
  */
 async function create_new_set(set) {
   try {
-    const { id_user, id_set, id_exercise, weight, rest_after_set, set_order } =
+    const { id_user, id_exercise, id_set, weight, rest_after_set, set_order } =
       set;
 
     const new_set = await pool.query(
@@ -227,22 +227,20 @@ async function delete_sets_by_id_user(id_user) {
 /**
  * Finds the id_set of the last set created
  * @param {number} id_user - User's id. It must be a integer and be store in database
- * @param {number} id_exercise- Exercise's id. It must be a integer and be store in database
  * @returns {Promise<Object>} - A promise of the id_set
  * @throws {CustomError} - If something goes wrong with database
  */
-async function find_id_set_of_last_set_created_by_id_user_id_exercise(
-  id_user,
-  id_exercise
+async function find_id_set_of_last_set_created_by_id_user(
+  id_user
 ) {
   try {
     const found_id_set = await pool.query(
       `
       SELECT MAX(s.id_set)
       FROM "SET" AS s
-      WHERE s.id_user = $1 AND s.id_exercise = $2
+      WHERE s.id_user = $1
       `,
-      [id_user, id_exercise]
+      [id_user]
     );
 
     return found_id_set.rows;
@@ -260,6 +258,6 @@ module.exports = {
   delete_sets_by_id_user_id_exercise,
   find_sets_by_id_user_id_exercise,
   update_set,
-  find_id_set_of_last_set_created_by_id_user_id_exercise,
-  find_set_by_id_user_id_exercise_id_set,
+  find_id_set_of_last_set_created_by_id_user,
+  find_set_by_id_user_id_exercise_id_set
 };

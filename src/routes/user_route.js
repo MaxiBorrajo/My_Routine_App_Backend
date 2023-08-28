@@ -6,7 +6,7 @@ const router = express.Router();
 
 const validate_fields_middleware = require("../middlewares/validate_fields_middleware");
 
-const cache = require("../middlewares/cache_middleware");
+const {cache_middleware} = require("../middlewares/cache_middleware");
 
 const passport = require("passport");
 
@@ -21,7 +21,6 @@ const {
   logout,
   send_feedback,
   delete_user,
-  is_logged_in,
 } = require("../controllers/user_controller");
 
 const {
@@ -113,7 +112,6 @@ router.get(
 router.get(
   "/google/redirect",
   passport.authenticate("google"),
-  cache(300),
   google_authentication
 );
 
@@ -162,21 +160,8 @@ router.get(
   "/",
   check_invalid_tokens_middleware,
   auth_middleware,
-  cache(300),
+  cache_middleware,
   get_current_user
-);
-
-/**
- * GET route to check is the current user is logged in or not
- *
- * @route {GET} /v1/user/is_logged_in
- */
-router.get(
-  "/is_logged_in",
-  check_invalid_tokens_middleware,
-  auth_middleware,
-  cache(300),
-  is_logged_in
 );
 
 /**
@@ -218,6 +203,8 @@ router.put(
  */
 router.delete(
   "/credentials",
+  check_invalid_tokens_middleware,
+  auth_middleware,
   logout
 );
 

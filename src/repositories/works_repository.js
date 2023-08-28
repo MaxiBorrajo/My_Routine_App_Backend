@@ -174,6 +174,32 @@ async function delete_works_by_id_user_id_exercise_id_muscle_group(
   }
 }
 
+/**
+ * Finds amount of muscle groups object by id_user, id_exercise
+ * @param {number} id_user - User's id. It must be a integer and be store in database
+ * @param {number} id_exercise - Exercise's id. It must be a integer and be store in database
+ * @returns {Promise<Object>} - A promise of the found time set object
+ * @throws {CustomError} - If something goes wrong with database
+ */
+async function find_amount_muscle_groups_by_id_exercise_id_user(
+  id_user,
+  id_exercise
+) {
+  try {
+    const found_amount = await pool.query(
+      `
+    SELECT COUNT(*) FROM WORKS AS w
+    WHERE w.id_user = $1 AND w.id_exercise = $2
+    `,
+      [id_user, id_exercise]
+    );
+    
+    return found_amount.rows;
+  } catch (error) {
+    throw new CustomError(error.message, error.status);
+  }
+}
+
 module.exports = {
   create_new_works,
   delete_works_by_id_user,
@@ -181,4 +207,5 @@ module.exports = {
   delete_works_by_id_user_id_exercise_id_muscle_group,
   find_muscle_groups_by_id_user_id_exercise,
   find_muscle_group_by_id_user_id_exercise_id_muscle_group,
+  find_amount_muscle_groups_by_id_exercise_id_user,
 };

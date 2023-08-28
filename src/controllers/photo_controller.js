@@ -1,4 +1,5 @@
 //Imports
+const redis = require("../config/redis_connection");
 
 const {
   find_exercise_by_id_user_id_exercise,
@@ -85,6 +86,16 @@ async function find_all_photos_of_exercise(req, res, next) {
       req.id_user,
       req.params.id_exercise
     );
+
+    const key = req.originalUrl;
+
+    if (found_photos.length > 0) {
+      const list = found_photos.map((obj) => JSON.stringify(obj));
+
+      await redis.lpush(key, list);
+
+      await redis.expire(key, 1);
+    }
 
     return return_response(res, 200, found_photos, true);
   } catch (error) {

@@ -1,4 +1,5 @@
 //Imports
+const redis = require("../config/redis_connection");
 
 const {
   create_new_routine,
@@ -9,7 +10,7 @@ const {
   find_routines_by_id_user_id_day,
   find_routines_of_exercise_by_id_user_idExercise,
   update_routine,
-  find_id_routine_of_last_routine_created_by_id_user
+  find_id_routine_of_last_routine_created_by_id_user,
 } = require("../repositories/routine_repository");
 
 const {
@@ -22,6 +23,7 @@ const {
   update_composed_by,
   delete_composed_by_by_id_user_id_routine_id_exercise,
   delete_composed_by_by_id_user_id_routine,
+  find_amount_exercises_by_id_routine_id_user,
 } = require("../repositories/composed_by_repository");
 
 const {
@@ -80,6 +82,8 @@ async function create_routine(req, res, next) {
  */
 async function find_routines(req, res, next) {
   try {
+    const key = req.originalUrl;
+
     for (let query in req.query) {
       if (Array.isArray(req.query[query]) && query !== "filter_values") {
         throw new CustomError(
@@ -152,6 +156,14 @@ async function find_routines(req, res, next) {
         req.query.order
       );
 
+      if (found_routines.length > 0) {
+        const list = found_routines.map((obj) => JSON.stringify(obj));
+
+        await redis.lpush(key, list);
+
+        await redis.expire(key, 1);
+      }
+
       return return_response(res, 200, found_routines, true);
     }
 
@@ -165,6 +177,14 @@ async function find_routines(req, res, next) {
         req.query.order
       );
 
+      if (found_routines.length > 0) {
+        const list = found_routines.map((obj) => JSON.stringify(obj));
+
+        await redis.lpush(key, list);
+
+        await redis.expire(key, 1);
+      }
+
       return return_response(res, 200, found_routines, true);
     }
 
@@ -173,6 +193,14 @@ async function find_routines(req, res, next) {
       req.query.sort_by,
       req.query.order
     );
+
+    if (found_routines.length > 0) {
+      const list = found_routines.map((obj) => JSON.stringify(obj));
+
+      await redis.lpush(key, list);
+
+      await redis.expire(key, 1);
+    }
 
     return return_response(res, 200, found_routines, true);
   } catch (error) {
@@ -194,6 +222,10 @@ async function find_specific_routine(req, res, next) {
       req.id_user,
       req.params.id_routine
     );
+
+    const key = req.originalUrl;
+
+    await redis.set(key, JSON.stringify(found_routine[0]), "EX", 1);
 
     return return_response(res, 200, found_routine[0], true);
   } catch (error) {
@@ -235,7 +267,7 @@ async function update_specific_routine(req, res, next) {
         ? req.body.time_before_start
         : found_routine[0].time_before_start,
       description: req.body.description,
-      is_favorite: Object.keys(req.body).includes('is_favorite')
+      is_favorite: Object.keys(req.body).includes("is_favorite")
         ? req.body.is_favorite
         : found_routine[0].is_favorite,
     };
@@ -330,6 +362,16 @@ async function find_routines_of_exercise(req, res, next) {
         req.id_user,
         req.params.id_exercise
       );
+
+    const key = req.originalUrl;
+
+    if (found_routines.length > 0) {
+      const list = found_routines.map((obj) => JSON.stringify(obj));
+
+      await redis.lpush(key, list);
+
+      await redis.expire(key, 1);
+    }
 
     return return_response(res, 200, found_routines, true);
   } catch (error) {
@@ -509,7 +551,32 @@ async function find_id_routine_of_last_routine_created(req, res, next) {
   }
 }
 
-//Exports 
+/**
+ * Controller that find amount of exercises of a routine
+ *
+ * @param {Object} req - The request object from the HTTP request.
+ * @param {Object} res - The response object from the HTTP response.
+ * @param {Function} next - The next function in the middleware chain.
+ * @throws {CustomError} If something goes wrong with database
+ */
+async function find_amount_exercises_of_routine(req, res, next) {
+  try {
+    const found_amount = await find_amount_exercises_by_id_routine_id_user(
+      req.id_user,
+      req.params.id_routine
+    );
+
+    const key = req.originalUrl;
+
+    await redis.set(key, JSON.stringify(found_amount[0].count), "EX", 1);
+
+    return return_response(res, 200, found_amount[0].count, true);
+  } catch (error) {
+    next(error);
+  }
+}
+
+//Exports
 
 module.exports = {
   create_routine,
@@ -521,5 +588,6 @@ module.exports = {
   change_order_exercise_in_routine,
   delete_exercise_from_routine,
   delete_specific_routine,
-  find_id_routine_of_last_routine_created
+  find_id_routine_of_last_routine_created,
+  find_amount_exercises_of_routine,
 };

@@ -1,11 +1,12 @@
 //Imports
+const redis = require("../config/redis_connection");
 
 const {
   create_new_set,
   delete_set_by_id_user_id_exercise_id_set,
   find_sets_by_id_user_id_exercise,
   update_set,
-  find_id_set_of_last_set_created_by_id_user_id_exercise,
+  find_id_set_of_last_set_created_by_id_user,
   find_set_by_id_user_id_exercise_id_set,
 } = require("../repositories/set_repository");
 
@@ -49,7 +50,7 @@ const {
  */
 async function create_set(req, res, next) {
   try {
-    const { id_exercise, weight, rest_after_set, set_order, type, quantity } =
+    const { id_exercise, id_set, weight, rest_after_set, set_order, type, quantity } =
       req.body;
 
     await find_exercise_by_id_user_id_exercise(req.id_user, id_exercise);
@@ -72,63 +73,62 @@ async function create_set(req, res, next) {
       );
     }
 
-    const last_id_set =
-      await find_id_set_of_last_set_created_by_id_user_id_exercise(
-        req.id_user,
-        id_exercise
-      );
-
     const new_set = {
       id_user: req.id_user,
       id_exercise: id_exercise,
-      id_set: last_id_set[0].max ? last_id_set[0].max + 1 : 1,
+      id_set: id_set,
       weight: weight,
       rest_after_set: rest_after_set,
       set_order: set_order,
     };
 
-    await create_new_set(new_set);
+    const result = await create_new_set(new_set);
 
-    if (type === "repetition") {
-      const new_repetition_set = {
-        id_user: req.id_user,
-        id_exercise: id_exercise,
-        id_set: new_set.id_set,
-        repetition: quantity,
-      };
+    if (result > 0) {
 
-      const created_repetition_set = await create_new_repetition_set(
-        new_repetition_set
-      );
+      if (type === "repetition") {
+        const new_repetition_set = {
+          id_user: req.id_user,
+          id_set: id_set,
+          id_exercise: id_exercise,
+          repetition: quantity,
+        };
 
-      if (are_equal(created_repetition_set, 0)) {
-        await delete_set_by_id_user_id_exercise_id_set(
-          req.id_user,
-          id_exercise,
-          new_set.id_set
+        const created_repetition_set = await create_new_repetition_set(
+          new_repetition_set
         );
 
-        throw new CustomError("Set could not be created", 500);
+        if (are_equal(created_repetition_set, 0)) {
+          await delete_set_by_id_user_id_exercise_id_set(
+            req.id_user,
+            id_exercise,
+            last_id_set[0].max
+          );
+
+          throw new CustomError("Set could not be created", 500);
+        }
+      } else {
+        const new_time_set = {
+          id_user: req.id_user,
+          id_set: id_set,
+          id_exercise: id_exercise,
+          time: quantity,
+        };
+
+        const created_time_set = await create_new_time_set(new_time_set);
+
+        if (are_equal(created_time_set, 0)) {
+          await delete_set_by_id_user_id_exercise_id_set(
+            req.id_user,
+            id_exercise,
+            last_id_set[0].max
+          );
+
+          throw new CustomError("Set could not be created", 500);
+        }
       }
     } else {
-      const new_time_set = {
-        id_user: req.id_user,
-        id_exercise: id_exercise,
-        id_set: new_set.id_set,
-        time: quantity,
-      };
-
-      const created_time_set = await create_new_time_set(new_time_set);
-
-      if (are_equal(created_time_set, 0)) {
-        await delete_set_by_id_user_id_exercise_id_set(
-          req.id_user,
-          id_exercise,
-          new_set.id_set
-        );
-
-        throw new CustomError("Set could not be created", 500);
-      }
+      throw new CustomError("Set could not be created", 500);
     }
 
     return return_response(
@@ -343,6 +343,16 @@ async function find_all_sets_of_exercise(req, res, next) {
     req.params.id_exercise
   );
 
+  const key = req.originalUrl;
+
+  if (found_sets.length > 0) {
+    const list = found_sets.map((obj) => JSON.stringify(obj));
+
+    await redis.lpush(key, list);
+
+    await redis.expire(key, 1);
+  }
+
   return return_response(res, 200, found_sets, true);
 }
 
@@ -397,6 +407,26 @@ async function delete_specific_exercise(req, res, next) {
   );
 }
 
+/**
+ * Controller that find the id of the last set created
+ *
+ * @param {Object} req - The request object from the HTTP request.
+ * @param {Object} res - The response object from the HTTP response.
+ * @param {Function} next - The next function in the middleware chain.
+ * @throws {CustomError} If something goes wrong with database
+ */
+async function find_id_set_of_last_set_created(req, res, next) {
+  try {
+    const found_id = await find_id_set_of_last_set_created_by_id_user(
+      req.id_user
+    );
+
+    return return_response(res, 200, found_id[0].max, true);
+  } catch (error) {
+    next(error);
+  }
+}
+
 //Exports
 
 module.exports = {
@@ -404,4 +434,5 @@ module.exports = {
   update_specific_set,
   find_all_sets_of_exercise,
   delete_specific_exercise,
+  find_id_set_of_last_set_created
 };

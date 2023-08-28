@@ -79,8 +79,8 @@ async function delete_time_set_by_id_user(id_user) {
   try {
     const deleted_time_sets = await pool.query(
       `
-    DELETE FROM TIMESET AS r
-    WHERE r.id_user = $1
+    DELETE FROM TIMESET AS t
+    WHERE t.id_user = $1
     `,
       [id_user]
     );
@@ -102,8 +102,8 @@ async function delete_time_set_by_id_user_id_exercise(id_user, id_exercise) {
   try {
     const deleted_time_sets = await pool.query(
       `
-    DELETE FROM TIMESET AS r
-    WHERE r.id_user = $1 AND r.id_exercise = $2
+    DELETE FROM TIMESET AS t
+    WHERE t.id_user = $1 AND t.id_exercise = $2
     `,
       [id_user, id_exercise]
     );
@@ -130,8 +130,8 @@ async function delete_time_set_by_id_user_id_exercise_id_set(
   try {
     const deleted_time_set = await pool.query(
       `
-    DELETE FROM TIMESET AS r
-    WHERE r.id_user = $1 AND r.id_exercise = $2 AND r.id_set = $3
+    DELETE FROM TIMESET AS t
+    WHERE t.id_user = $1 AND t.id_exercise = $2 AND t.id_set = $3
     `,
       [id_user, id_exercise, id_set]
     );
@@ -158,8 +158,8 @@ async function find_time_set_by_id_user_id_exercise_id_set(
   try {
     const found_time_set = await pool.query(
       `
-    SELECT r.* FROM TIMESET AS r
-    WHERE r.id_user = $1 AND r.id_exercise = $2 AND r.id_set = $3
+    SELECT t.* FROM TIMESET AS t
+    WHERE t.id_user = $1 AND t.id_exercise = $2 AND t.id_set = $3
     `,
       [id_user, id_exercise, id_set]
     );
@@ -170,6 +170,28 @@ async function find_time_set_by_id_user_id_exercise_id_set(
   }
 }
 
+/**
+ * Finds amount of time sets object by id_user, id_exercise
+ * @param {number} id_user - User's id. It must be a integer and be store in database
+ * @param {number} id_exercise - Exercise's id. It must be a integer and be store in database
+ * @returns {Promise<Object>} - A promise of the found time set object
+ * @throws {CustomError} - If something goes wrong with database
+ */
+async function find_amount_time_sets_by_id_exercise_id_user(id_user, id_exercise){
+  try {
+    const found_amount = await pool.query(
+      `
+    SELECT COUNT(*) FROM TIMESET AS t
+    WHERE t.id_user = $1 AND t.id_exercise = $2
+    `,
+      [id_user, id_exercise]
+    );
+
+    return found_amount.rows;
+  } catch (error) {
+    throw new CustomError(error.message, error.status);
+  }
+}
 //Exports
 
 module.exports = {
@@ -179,4 +201,5 @@ module.exports = {
   delete_time_set_by_id_user_id_exercise_id_set,
   update_time_set,
   find_time_set_by_id_user_id_exercise_id_set,
+  find_amount_time_sets_by_id_exercise_id_user
 };

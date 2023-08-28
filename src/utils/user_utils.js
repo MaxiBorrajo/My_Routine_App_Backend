@@ -135,7 +135,7 @@ async function get_authorization(user, req, res, next, is_from_google) {
       sameSite: "None",
       secure: true,
       path: "/",
-      // domain: '.my-routine-app-backend.vercel.app	'
+      domain: '.my-routine-app-backend.vercel.app	'
     });
 
     res.cookie("_refresh_token", refresh_token, {
@@ -143,7 +143,7 @@ async function get_authorization(user, req, res, next, is_from_google) {
       sameSite: "None",
       secure: true,
       path: "/",
-      // domain: '.my-routine-app-backend.vercel.app	'
+      domain: '.my-routine-app-backend.vercel.app	'
     });
 
     delete user.password;
@@ -155,7 +155,8 @@ async function get_authorization(user, req, res, next, is_from_google) {
     if (!is_from_google) {
       return return_response(res, status, user, true);
     }
-    res.redirect("http://localhost:5173/dashboard");
+
+    res.redirect(`${process.env.URL_FRONTEND}/dashboard`);
   } catch (error) {
     next(error);
   }

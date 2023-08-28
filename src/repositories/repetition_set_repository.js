@@ -16,7 +16,7 @@ const CustomError = require("../utils/custom_error");
  * repetition_set.repetition {number} - How much repetitions are done in the set
  * @returns {Promise<Object>} - A promise created of the repetition set object
  * @throws {CustomError} - If something goes wrong with database
- */
+ */ 
 async function create_new_repetition_set(repetition_set) {
   try {
     const { id_user, id_exercise, id_set, repetition } = repetition_set;
@@ -171,6 +171,30 @@ async function find_repetition_set_by_id_user_id_exercise_id_set(
   }
 }
 
+
+/**
+ * Finds amount of repetition sets object by id_user, id_exercise
+ * @param {number} id_user - User's id. It must be a integer and be store in database
+ * @param {number} id_exercise - Exercise's id. It must be a integer and be store in database
+ * @returns {Promise<Object>} - A promise of the found time set object
+ * @throws {CustomError} - If something goes wrong with database
+ */
+async function find_amount_repetition_sets_by_id_exercise_id_user(id_user, id_exercise){
+  try {
+    const found_amount = await pool.query(
+      `
+    SELECT COUNT(*) FROM REPETITIONSET AS r
+    WHERE r.id_user = $1 AND r.id_exercise = $2
+    `,
+      [id_user, id_exercise]
+    );
+
+    return found_amount.rows;
+  } catch (error) {
+    throw new CustomError(error.message, error.status);
+  }
+}
+
 //Methods
 
 module.exports = {
@@ -180,4 +204,5 @@ module.exports = {
   delete_repetition_set_by_id_user_id_exercise_id_set,
   update_repetition_set,
   find_repetition_set_by_id_user_id_exercise_id_set,
+  find_amount_repetition_sets_by_id_exercise_id_user
 };

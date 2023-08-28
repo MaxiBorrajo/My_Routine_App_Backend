@@ -211,13 +211,13 @@ async function delete_routine_by_id_user_id_routine(id_user, id_routine) {
 /**
  * Finds all routines associated with an exercise
  * @param {number} id_user - User's id. It must be a integer and be store in database
- * @param {number} idExercise - Exercise's id. It must be a integer and be store in database
+ * @param {number} id_exercise - Exercise's id. It must be a integer and be store in database
  * @returns {Promise<Object>} - A promise of the found routine
  * @throws {CustomError} - If something goes wrong with database
  */
 async function find_routines_of_exercise_by_id_user_idExercise(
   id_user,
-  idExercise
+  id_exercise
 ) {
   try {
     const found_routines = await pool.query(
@@ -228,7 +228,7 @@ async function find_routines_of_exercise_by_id_user_idExercise(
       JOIN COMPOSEDBY AS c ON r.id_user = c.id_user AND r.id_routine = c.id_routine
       WHERE r.id_user = $1 AND c.id_exercise = $2
       `,
-      [id_user, idExercise]
+      [id_user, id_exercise]
     );
 
     return found_routines.rows;
@@ -342,6 +342,7 @@ async function find_id_routine_of_last_routine_created_by_id_user(
     throw new CustomError(error.message, error.status);
   }
 }
+
 
 //Exports
 

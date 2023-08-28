@@ -17,12 +17,14 @@ const pool = new pg.Pool({
  * @throws {Error} - If it cannot connect with database throws an error.
  */
 async function db_connection() {
-  const connection = await pool.connect();
-  if (connection._connected) {
-    console.log("Database connection successful");
-  } else {
+  try {
+    const connection = await pool.connect();
+    if (connection._connected) {
+      console.log("Database connection successful");
+    }
+  } catch (error) {
     throw new CustomError(
-      "An error has ocurred during connection with database",
+      `An error has ocurred during connection with database: ${error.message}`,
       500
     );
   }

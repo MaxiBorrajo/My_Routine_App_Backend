@@ -1,4 +1,5 @@
 //Imports
+const redis = require("../config/redis_connection");
 
 const {
   delete_auth_by_id_user,
@@ -203,7 +204,7 @@ async function forgot_password(req, res, next) {
       throw new CustomError("Something went wrong. Try again later", 500);
     }
 
-    const reset_password_url = `http://localhost:5173/reset_password/${reset_password_token}`; //link al front
+    const reset_password_url = `${process.env.URL_FRONTEND}/reset_password/${reset_password_token}`; //link al front
     //esto despues va a ser un archivo html lindo
     const reset_password_email_body = `
         <h1>Reset password</h1>
@@ -334,22 +335,11 @@ async function get_current_user(req, res, next) {
 
     delete found_user[0].password;
 
-    return return_response(res, 200, found_user[0], true);
-  } catch (error) {
-    next(error);
-  }
-}
+    const key = req.originalUrl;
 
-/**
- * Controller that checks if the current user is logged in
- *
- * @param {Object} req - The request object from the HTTP request
- * @param {Object} res - The response object from the HTTP response
- * @param {Function} next - The next function in the middleware chain
- */
-async function is_logged_in(req, res, next) {
-  try {
-    return return_response(res, 200, { message: "is_logged_in" }, true);
+    await redis.set(key, JSON.stringify(found_user[0]), "EX", 1);
+
+    return return_response(res, 200, found_user[0], true);
   } catch (error) {
     next(error);
   }
@@ -448,16 +438,16 @@ async function update_current_user(req, res, next) {
  */
 async function logout(req, res, next) {
   try {
-    // let new_invalid_token = {
-    //   id_user: req.id_user,
-    //   token: req.cookies._access_token,
-    // };
+    let new_invalid_token = {
+      id_user: req.id_user,
+      token: req.cookies._access_token,
+    };
 
-    // await create_new_invalid_token(new_invalid_token);
+    await create_new_invalid_token(new_invalid_token);
 
-    // new_invalid_token.token = req.cookies._refresh_token;
+    new_invalid_token.token = req.cookies._refresh_token;
 
-    // await create_new_invalid_token(new_invalid_token);
+    await create_new_invalid_token(new_invalid_token);
 
     const cookies = req.cookies;
 
@@ -554,9 +544,9 @@ async function delete_user(req, res, next) {
 
     await delete_user_by_id_user(req.id_user);
 
-    res.clearCookie("access_token");
+    res.clearCookie("_access_token");
 
-    res.clearCookie("refresh_token");
+    res.clearCookie("_refresh_token");
 
     if (req.user) {
       req.logout();
@@ -586,5 +576,4 @@ module.exports = {
   logout,
   send_feedback,
   delete_user,
-  is_logged_in,
 };

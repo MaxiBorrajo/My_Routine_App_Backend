@@ -211,6 +211,59 @@ async function delete_composed_by_by_id_user(id_user) {
   }
 }
 
+/**
+ * Finds amounts of routine by id_exercise and id_user
+ * @param {number} id_user - User's id. It must be a integer and be store in database
+ * @param {number} id_exercise - Exercise's id. It must be a integer and be store in database
+ * @returns {Promise<Object>} - A promise of the id_routine
+ * @throws {CustomError} - If something goes wrong with database
+ */
+async function find_amount_routines_by_id_exercise_id_user(
+  id_user,
+  id_exercise
+) {
+  try {
+    const found_amount = await pool.query(
+      `
+      SELECT COUNT(*)
+      FROM COMPOSEDBY AS c
+      WHERE c.id_user = $1 AND c.id_exercise = $2
+      `,
+      [id_user, id_exercise]
+    );
+
+    return found_amount.rows;
+  } catch (error) {
+    throw new CustomError(error.message, error.status);
+  }
+}
+
+/**
+ * Finds amounts of exercises by id_routine and id_user
+ * @param {number} id_user - User's id. It must be a integer and be store in database
+ * @param {number} id_routine - Routine's id. It must be a integer and be store in database
+ * @returns {Promise<Object>} - A promise of the id_routine
+ * @throws {CustomError} - If something goes wrong with database
+ */
+async function find_amount_exercises_by_id_routine_id_user(
+  id_user,
+  id_routine
+) {
+  try {
+    const found_amount = await pool.query(
+      `
+      SELECT COUNT(*)
+      FROM COMPOSEDBY AS c
+      WHERE c.id_user = $1 AND c.id_routine = $2
+      `,
+      [id_user, id_routine]
+    );
+
+    return found_amount.rows;
+  } catch (error) {
+    throw new CustomError(error.message, error.status);
+  }
+}
 //Exports
 
 module.exports = {
@@ -221,4 +274,6 @@ module.exports = {
   update_composed_by,
   delete_composed_by_by_id_user_id_routine,
   delete_composed_by_by_id_user_id_exercise,
+  find_amount_routines_by_id_exercise_id_user,
+  find_amount_exercises_by_id_routine_id_user
 };

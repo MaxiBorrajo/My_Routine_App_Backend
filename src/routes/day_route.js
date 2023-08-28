@@ -4,9 +4,9 @@ const express = require("express");
 
 const router = express.Router();
 
-const validate_fields_middleware = require("../middlewares/validate_fields_middleware");
+const {cache_middleware} = require("../middlewares/cache_middleware");
 
-const cache = require("../middlewares/cache_middleware");
+const validate_fields_middleware = require("../middlewares/validate_fields_middleware");
 
 const {
   find_all_days,
@@ -32,7 +32,7 @@ router.get(
   "/",
   check_invalid_tokens_middleware,
   auth_middleware,
-  cache(300),
+  cache_middleware,
   find_all_days
 );
 
@@ -68,7 +68,7 @@ router.get(
   "/routine/:id_routine",
   check_invalid_tokens_middleware,
   auth_middleware,
-  cache(300),
+  cache_middleware,
   find_days_assign_to_a_routine
 );
 

@@ -36,6 +36,8 @@ const photo_route = require("./src/routes/photo_route");
 
 const set_route = require("./src/routes/set_route");
 
+const compression = require('compression');
+
 //Dependencies
 
 app.use(
@@ -81,6 +83,8 @@ app.use(xss());
 
 app.use(error_handler_middleware);
 
+app.use(compression());
+
 //Routes
 
 app.use("/v1/user", user_route);
@@ -90,12 +94,12 @@ app.use("/v1/routine", routine_route);
 app.use("/v1/exercise", exercise_route);
 
 app.use("/v1/day", day_route);
-
+ 
 app.use("/v1/muscle_group", muscle_group_route);
 
 app.use("/v1/photo", photo_route);
 
-app.use("/v1/set", set_route);
+app.use("/v1/set", set_route);  
 
 //Exports
 

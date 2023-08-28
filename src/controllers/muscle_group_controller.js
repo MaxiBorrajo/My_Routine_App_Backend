@@ -1,4 +1,5 @@
 //Imports
+const redis = require("../config/redis_connection");
 
 const {
   get_all_muscle_groups,
@@ -37,6 +38,14 @@ const {
 async function find_all_muscle_groups(req, res, next) {
   try {
     const found_muscle_groups = await get_all_muscle_groups();
+
+    const key = req.originalUrl;
+
+    if (found_muscle_groups.length > 0) {
+      const list = found_muscle_groups.map((obj) => JSON.stringify(obj));
+
+      await redis.lpush(key, list);
+    }
 
     return return_response(res, 200, found_muscle_groups, true);
   } catch (error) {
@@ -115,6 +124,16 @@ async function find_muscle_groups_assign_to_exercise(req, res, next) {
       req.id_user,
       req.params.id_exercise
     );
+
+    const key = req.originalUrl;
+
+    if (found_works.length > 0) {
+      const list = found_works.map((obj) => JSON.stringify(obj));
+
+      await redis.lpush(key, list);
+
+      await redis.expire(key, 1);
+    }
 
     return return_response(res, 200, found_works, true);
   } catch (error) {

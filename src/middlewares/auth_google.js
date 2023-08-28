@@ -24,7 +24,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "http://localhost:3000/v1/user/google/redirect",
+      callbackURL: `${process.env.URL_BACKEND}/v1/user/google/redirect`,
       passReqToCallback: true,
     },
     /**

@@ -4,7 +4,7 @@ const express = require("express");
 
 const router = express.Router();
 
-const cache = require("../middlewares/cache_middleware");
+const {cache_middleware} = require("../middlewares/cache_middleware");
 
 const {
   create_photo,
@@ -52,7 +52,7 @@ router.get(
   "/exercise/:id_exercise",
   check_invalid_tokens_middleware,
   auth_middleware,
-  cache(300),
+  cache_middleware,
   find_all_photos_of_exercise
 );
 

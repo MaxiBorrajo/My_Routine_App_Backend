@@ -1,29 +1,43 @@
 //Imports
 
-const NodeCache = require("node-cache");
+const redis = require("../config/redis_connection");
 
-//Variables
-
-const cache = new NodeCache();
+const { return_response } = require("../utils/utils_functions");
 
 //Exports
 
-module.exports = (duration) => (req, res, next) => {
-  const key = req.originalUrl;
+async function get_key_type(key) {
+  const result = await redis.type(key);
 
-  const cached_response = cache.get(key);
+  return result;
+}
 
-  if (cached_response) {
-    res.send(cached_response);
-  } else {
-    res.originalSend = res.send;
+const cache_middleware = async (req, res, next) => {
+  try {
+    const key = req.originalUrl;
 
-    res.send = (body) => {
-      res.originalSend(body);
-      
-      cache.set(key, body, duration);
-    };
+    const key_type = await get_key_type(key);
 
-    next();
+    if (key_type === "list") {
+      const cached_list = await redis.lrange(key, 0, -1);
+
+      const parsed_list = cached_list.map((item) => JSON.parse(item));
+
+      return return_response(res, 200, parsed_list, true);
+    } else if (key_type === "string") {
+      const cached_value = await redis.get(key);
+
+      const parsed_value = JSON.parse(cached_value);
+
+      return return_response(res, 200, parsed_value, true);
+    } else {
+      next();
+    }
+  } catch (error) {
+    next(error);
   }
+};
+
+module.exports = {
+  cache_middleware,
 };
