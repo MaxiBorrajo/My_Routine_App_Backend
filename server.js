@@ -6,7 +6,7 @@ const express = require("express");
 
 const session = require("express-session");
 
-const RedisStore = require("connect-redis");
+const RedisStore = require("connect-redis").default;
 
 const redis = require("./src/config/redis_connection");
 
