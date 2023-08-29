@@ -46,7 +46,7 @@ const compression = require("compression");
 
 app.use(
   cors({
-    origin: true,
+    origin: 'https://my-routine-app-frontend.vercel.app',
     credentials: true,
   })
 );
