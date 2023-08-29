@@ -6,6 +6,10 @@ const express = require("express");
 
 const session = require("express-session");
 
+const RedisStore = require("connect-redis");
+
+const redis = require("./src/config/redis_connection");
+
 const app = express();
 
 const morgan = require("morgan");
@@ -36,7 +40,7 @@ const photo_route = require("./src/routes/photo_route");
 
 const set_route = require("./src/routes/set_route");
 
-const compression = require('compression');
+const compression = require("compression");
 
 //Dependencies
 
@@ -51,7 +55,7 @@ app.use((req, res, next) => {
   res.set({
     "Access-Control-Allow-Origin": "https://my-routine-app-frontend.vercel.app",
   });
-//http://localhost:5173, 
+  //http://localhost:5173,
   next();
 });
 
@@ -63,8 +67,14 @@ app.use(morgan("dev"));
 
 app.use(cookie_parser());
 
+let redisStore = new RedisStore({
+  client: redis,
+  prefix: "myapp:",
+});
+
 app.use(
   session({
+    store: redisStore,
     secret: process.env.SECRET,
     resave: false,
     saveUninitialized: false,
@@ -94,12 +104,12 @@ app.use("/v1/routine", routine_route);
 app.use("/v1/exercise", exercise_route);
 
 app.use("/v1/day", day_route);
- 
+
 app.use("/v1/muscle_group", muscle_group_route);
 
 app.use("/v1/photo", photo_route);
 
-app.use("/v1/set", set_route);  
+app.use("/v1/set", set_route);
 
 //Exports
 
