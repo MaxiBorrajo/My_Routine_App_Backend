@@ -175,7 +175,7 @@ async function update_specific_set(req, res, next) {
       );
     }
 
-    if (req.body.type && !req.body.quantity) {
+    if (req.body.type && !req.body.hasOwnProperty('quantity')) {
       throw new CustomError("If type is present you must add a quantity", 400);
     }
 

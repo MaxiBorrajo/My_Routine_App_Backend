@@ -135,7 +135,7 @@ async function get_authorization(user, req, res, next, is_from_google) {
       sameSite: "None",
       secure: true,
       path: "/",
-      domain: '.railway.app'
+      // domain: '.railway.app'
     });
 
     res.cookie("_refresh_token", refresh_token, {
@@ -143,7 +143,7 @@ async function get_authorization(user, req, res, next, is_from_google) {
       sameSite: "None",
       secure: true,
       path: "/",
-      domain: '.railway.app'
+      // domain: '.railway.app'
     });
 
     delete user.password;
@@ -156,7 +156,7 @@ async function get_authorization(user, req, res, next, is_from_google) {
       return return_response(res, status, user, true);
     }
 
-    res.redirect(`${process.env.URL_FRONTEND}/dashboard`);
+    res.redirect(`${process.env.URL_FRONTEND}?google_redirect=true`);
   } catch (error) {
     next(error);
   }

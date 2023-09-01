@@ -14,13 +14,13 @@ const { return_response } = require("../utils/utils_functions");
  */
 function error_handler_middleware(err, req, res, next) {
 
-  console.log(err)
-
   const message = {
-    message: `Something went wrong. Error: ${err.message}` || "Unknown error",
+    message: err.message
+      ? `Something went wrong. Error: ${err.message}`
+      : "Unknown error",
   };
 
-  const status = err.status || 500;
+  const status = err.status ? err.status : 500;
 
   return return_response(res, status, message, false);
 }

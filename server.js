@@ -51,14 +51,6 @@ app.use(
   })
 );
 
-app.use((req, res, next) => {
-  res.set({
-    "Access-Control-Allow-Origin": `${process.env.URL_FRONTEND}`,
-  });
-  //http://localhost:5173,
-  next();
-});
-
 app.use(express.json());
 
 app.use(express.urlencoded({ extended: false }));
@@ -89,12 +81,6 @@ app.use(helmet());
 
 app.use(xss());
 
-//Global middlewares
-
-app.use(error_handler_middleware);
-
-app.use(compression());
-
 //Routes
 
 app.use("/v1/user", user_route);
@@ -110,6 +96,21 @@ app.use("/v1/muscle_group", muscle_group_route);
 app.use("/v1/photo", photo_route);
 
 app.use("/v1/set", set_route);
+
+//Global middlewares
+
+app.use((req, res, next) => {
+  res.set({
+    "Access-Control-Allow-Origin": `${process.env.URL_FRONTEND}`,
+  });
+
+  next();
+});
+
+app.use(error_handler_middleware);
+
+app.use(compression());
+
 
 //Exports
 

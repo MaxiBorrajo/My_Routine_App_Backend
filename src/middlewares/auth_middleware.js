@@ -89,7 +89,7 @@ async function auth_middleware(req, res, next) {
         sameSite: "None",
         secure: true,
         path: "/",
-        domain: ".railway.app",
+        // domain: ".railway.app",
       });
 
       res.cookie("_refresh_token", refresh_token, {
@@ -97,7 +97,7 @@ async function auth_middleware(req, res, next) {
         sameSite: "None",
         secure: true,
         path: "/",
-        domain: ".railway.app",
+        // domain: ".railway.app",
       });
 
       req.id_user = payload.id_user;

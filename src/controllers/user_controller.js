@@ -140,7 +140,7 @@ async function login(req, res, next) {
       are_equal(found_user.length, 0) ||
       !(await match_passwords(password, found_user[0].password))
     ) {
-      throw new CustomError("Email or password are incorrect", 404);
+      throw new CustomError("Email or password are incorrect", 404)
     }
 
     return get_authorization(found_user[0], req, res, next, false);
@@ -544,20 +544,37 @@ async function delete_user(req, res, next) {
 
     await delete_user_by_id_user(req.id_user);
 
-    res.clearCookie("_access_token");
+    const cookies = req.cookies;
 
-    res.clearCookie("_refresh_token");
-
-    if (req.user) {
-      req.logout();
+    for (let cookieName in cookies) {
+      res.clearCookie(cookieName, {
+        path: "/",
+        sameSite: "None",
+        secure: true,
+        expires: new Date(0),
+      });
     }
 
-    return return_response(
-      res,
-      200,
-      { message: "User deleted successfully" },
-      true
-    );
+    if (req.user) {
+      req.logout(function (err) {
+        if (err) {
+          return next(err);
+        }
+        return return_response(
+          res,
+          200,
+          { message: "User deleted successfully" },
+          true
+        );
+      });
+    } else {
+      return return_response(
+        res,
+        200,
+        { message: "User deleted successfully" },
+        true
+      );
+    }
   } catch (error) {
     next(error);
   }
