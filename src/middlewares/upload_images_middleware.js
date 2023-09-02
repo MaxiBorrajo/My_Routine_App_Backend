@@ -17,21 +17,6 @@ const storage = multer.memoryStorage();
 
 const multer_uploads = multer({ storage }).single("image");
 
-// const upload_multer = upload.single("image");
-
-/**
- * Delete an image file from local storage
- * @param {string} filepath - The path of the file to be deleted
- * @returns {void}
- * @throws {Error} If an error occurs in the deletion process
- */
-function delete_image_from_localStorage(filepath) {
-  try {
-    fs.promises.unlink(filepath);
-  } catch (error) {
-    throw error;
-  }
-}
 
 /**
  * Upload an image file to a cloud storage using cloudinary library
