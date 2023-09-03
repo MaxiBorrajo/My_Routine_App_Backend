@@ -50,8 +50,15 @@ const {
  */
 async function create_set(req, res, next) {
   try {
-    const { id_exercise, id_set, weight, rest_after_set, set_order, type, quantity } =
-      req.body;
+    const {
+      id_exercise,
+      id_set,
+      weight,
+      rest_after_set,
+      set_order,
+      type,
+      quantity,
+    } = req.body;
 
     await find_exercise_by_id_user_id_exercise(req.id_user, id_exercise);
 
@@ -85,7 +92,6 @@ async function create_set(req, res, next) {
     const result = await create_new_set(new_set);
 
     if (result > 0) {
-
       if (type === "repetition") {
         const new_repetition_set = {
           id_user: req.id_user,
@@ -175,7 +181,7 @@ async function update_specific_set(req, res, next) {
       );
     }
 
-    if (req.body.type && !req.body.hasOwnProperty('quantity')) {
+    if (req.body.type && !req.body.hasOwnProperty("quantity")) {
       throw new CustomError("If type is present you must add a quantity", 400);
     }
 
@@ -204,17 +210,23 @@ async function update_specific_set(req, res, next) {
       req.params.id_set
     );
 
+    // const new_information_set = {
+    //   id_user: req.id_user,
+    //   id_exercise: found_set[0].id_exercise,
+    //   id_set: found_set[0].id_set,
+    //   weight: req.body.weight ? req.body.weight : found_set[0].weight,
+    //   rest_after_set: req.body.rest_after_set
+    //     ? req.body.rest_after_set
+    //     : found_set[0].rest_after_set,
+    //   set_order: req.body.set_order
+    //     ? req.body.set_order
+    //     : found_set[0].set_order,
+    // };
+
     const new_information_set = {
-      id_user: req.id_user,
-      id_exercise: found_set[0].id_exercise,
-      id_set: found_set[0].id_set,
-      weight: req.body.weight ? req.body.weight : found_set[0].weight,
-      rest_after_set: req.body.rest_after_set
-        ? req.body.rest_after_set
-        : found_set[0].rest_after_set,
-      set_order: req.body.set_order
-        ? req.body.set_order
-        : found_set[0].set_order,
+      ...found_set[0],
+      ...req.body,
+      ...{ id_user: req.id_user },
     };
 
     await update_set(new_information_set);
@@ -434,5 +446,5 @@ module.exports = {
   update_specific_set,
   find_all_sets_of_exercise,
   delete_specific_exercise,
-  find_id_set_of_last_set_created
+  find_id_set_of_last_set_created,
 };
