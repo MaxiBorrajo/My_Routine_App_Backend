@@ -7,10 +7,6 @@ const {
 
 const { find_user_by_id_user } = require("../repositories/user_repository");
 
-const {
-  create_new_invalid_token,
-} = require("../repositories/invalid_token_repository");
-
 const CustomError = require("../utils/custom_error");
 
 const { generate_tokens } = require("../utils/user_utils");
@@ -44,13 +40,6 @@ async function auth_middleware(req, res, next) {
         req.cookies._refresh_token,
         process.env.REFRESH_JWT_SECRET
       );
-
-      const new_invalid_token = {
-        id_user: payload.id_user,
-        token: req.cookies._refresh_token,
-      };
-
-      await create_new_invalid_token(new_invalid_token);
 
       const found_user = await find_user_by_id_user(payload.id_user);
 
