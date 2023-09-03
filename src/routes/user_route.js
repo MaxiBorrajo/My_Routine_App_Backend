@@ -30,8 +30,6 @@ const {
 
 const auth_middleware = require("../middlewares/auth_middleware");
 
-const check_invalid_tokens_middleware = require("../middlewares/invalid_token_middleware");
-
 require("../middlewares/auth_google");
 
 //Routes
@@ -158,7 +156,6 @@ router.put(
  */
 router.get(
   "/",
-  check_invalid_tokens_middleware,
   auth_middleware,
   cache_middleware,
   get_current_user
@@ -186,7 +183,6 @@ router.get(
  */
 router.put(
   "/",
-  check_invalid_tokens_middleware,
   auth_middleware,
   multer_uploads,
   process_image,
@@ -203,7 +199,6 @@ router.put(
  */
 router.delete(
   "/credentials",
-  check_invalid_tokens_middleware,
   auth_middleware,
   logout
 );
@@ -219,7 +214,6 @@ router.delete(
  */
 router.post(
   "/feedback",
-  check_invalid_tokens_middleware,
   auth_middleware,
   validate_fields_middleware.body_must_contain_attributes(["comment"]),
   send_feedback
@@ -234,7 +228,6 @@ router.post(
  */
 router.delete(
   "/",
-  check_invalid_tokens_middleware,
   auth_middleware,
   delete_user
 );

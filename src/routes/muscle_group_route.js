@@ -17,8 +17,6 @@ const {
 
 const auth_middleware = require("../middlewares/auth_middleware");
 
-const check_invalid_tokens_middleware = require("../middlewares/invalid_token_middleware");
-
 //Routes
 
 /**
@@ -30,7 +28,6 @@ const check_invalid_tokens_middleware = require("../middlewares/invalid_token_mi
  */
 router.get(
   "/",
-  check_invalid_tokens_middleware,
   auth_middleware,
   cache_middleware,
   find_all_muscle_groups
@@ -53,7 +50,6 @@ router.post(
     "id_exercise",
     "id_muscle_group"
   ]),
-  check_invalid_tokens_middleware,
   auth_middleware,
   assign_muscle_group_to_exercise
 );
@@ -67,7 +63,6 @@ router.post(
  */
 router.get(
   "/exercise/:id_exercise",
-  check_invalid_tokens_middleware,
   auth_middleware,
   cache_middleware,
   find_muscle_groups_assign_to_exercise
@@ -82,7 +77,6 @@ router.get(
  */
 router.delete(
   "/:id_muscle_group/exercise/:id_exercise",
-  check_invalid_tokens_middleware,
   auth_middleware,
   unassign_muscle_group_from_exercise
 );

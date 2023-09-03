@@ -4,7 +4,7 @@ const express = require("express");
 
 const router = express.Router();
 
-const {cache_middleware} = require("../middlewares/cache_middleware");
+const { cache_middleware } = require("../middlewares/cache_middleware");
 
 const validate_fields_middleware = require("../middlewares/validate_fields_middleware");
 
@@ -19,12 +19,10 @@ const {
   find_amount_muscle_groups_of_exercise,
   find_amount_time_sets_of_exercise,
   find_amount_repetition_sets_of_exercise,
-  find_amount_routines_of_exercise
+  find_amount_routines_of_exercise,
 } = require("../controllers/exercise_controller");
 
 const auth_middleware = require("../middlewares/auth_middleware");
-
-const check_invalid_tokens_middleware = require("../middlewares/invalid_token_middleware");
 
 //Routes
 
@@ -48,7 +46,6 @@ router.post(
     "description",
     "intensity",
   ]),
-  check_invalid_tokens_middleware,
   auth_middleware,
   create_exercise
 );
@@ -73,7 +70,6 @@ router.post(
  */
 router.get(
   "/",
-  check_invalid_tokens_middleware,
   auth_middleware,
   cache_middleware,
   find_all_exercises
@@ -88,7 +84,6 @@ router.get(
  */
 router.get(
   "/last",
-  check_invalid_tokens_middleware,
   auth_middleware,
   cache_middleware,
   find_id_exercise_of_last_exercise_created
@@ -115,7 +110,6 @@ router.get(
  */
 router.get(
   "/routine/:id_routine",
-  check_invalid_tokens_middleware,
   auth_middleware,
   cache_middleware,
   find_exercises_of_routine
@@ -130,7 +124,6 @@ router.get(
  */
 router.get(
   "/:id_exercise",
-  check_invalid_tokens_middleware,
   auth_middleware,
   cache_middleware,
   find_specific_exercise
@@ -145,7 +138,6 @@ router.get(
  */
 router.get(
   "/:id_exercise/amount/time_set",
-  check_invalid_tokens_middleware,
   auth_middleware,
   cache_middleware,
   find_amount_time_sets_of_exercise
@@ -160,7 +152,6 @@ router.get(
  */
 router.get(
   "/:id_exercise/amount/repetition_set",
-  check_invalid_tokens_middleware,
   auth_middleware,
   cache_middleware,
   find_amount_repetition_sets_of_exercise
@@ -175,7 +166,6 @@ router.get(
  */
 router.get(
   "/:id_exercise/amount/muscle_group",
-  check_invalid_tokens_middleware,
   auth_middleware,
   cache_middleware,
   find_amount_muscle_groups_of_exercise
@@ -190,7 +180,6 @@ router.get(
  */
 router.get(
   "/:id_exercise/amount/routines",
-  check_invalid_tokens_middleware,
   auth_middleware,
   cache_middleware,
   find_amount_routines_of_exercise
@@ -213,7 +202,6 @@ router.get(
  */
 router.put(
   "/:id_exercise",
-  check_invalid_tokens_middleware,
   auth_middleware,
   update_specific_exercise
 );
@@ -228,7 +216,6 @@ router.put(
  */
 router.delete(
   "/:id_exercise",
-  check_invalid_tokens_middleware,
   auth_middleware,
   delete_specific_exercise
 );

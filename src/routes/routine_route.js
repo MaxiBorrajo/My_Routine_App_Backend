@@ -24,8 +24,6 @@ const {
 
 const auth_middleware = require("../middlewares/auth_middleware");
 
-const check_invalid_tokens_middleware = require("../middlewares/invalid_token_middleware");
-
 //Routes
 
 /**
@@ -47,7 +45,6 @@ router.post(
     "time_before_start",
     "description",
   ]),
-  check_invalid_tokens_middleware,
   auth_middleware,
   create_routine
 );
@@ -69,7 +66,6 @@ router.post(
  */
 router.get(
   "/",
-  check_invalid_tokens_middleware,
   auth_middleware,
   cache_middleware,
   find_routines
@@ -84,7 +80,6 @@ router.get(
  */
 router.get(
   "/last",
-  check_invalid_tokens_middleware,
   auth_middleware,
   cache_middleware,
   find_id_routine_of_last_routine_created
@@ -100,7 +95,6 @@ router.get(
  */
 router.get(
   "/:id_routine",
-  check_invalid_tokens_middleware,
   auth_middleware,
   cache_middleware,
   find_specific_routine
@@ -115,7 +109,6 @@ router.get(
  */
 router.get(
   "/:id_routine/amount/exercises",
-  check_invalid_tokens_middleware,
   auth_middleware,
   cache_middleware,
   find_amount_exercises_of_routine
@@ -138,7 +131,6 @@ router.get(
  */
 router.put(
   "/:id_routine",
-  check_invalid_tokens_middleware,
   auth_middleware,
   update_specific_routine
 );
@@ -155,7 +147,6 @@ router.put(
 router.post(
   "/:id_routine/exercise/:id_exercise",
   validate_fields_middleware.body_must_contain_attributes(["exercise_order"]),
-  check_invalid_tokens_middleware,
   auth_middleware,
   add_exercise_to_routine
 );
@@ -169,7 +160,6 @@ router.post(
  */
 router.get(
   "/exercise/:id_exercise",
-  check_invalid_tokens_middleware,
   auth_middleware,
   cache_middleware,
   find_routines_of_exercise
@@ -187,7 +177,6 @@ router.get(
 router.put(
   "/:id_routine/exercise/:id_exercise",
   validate_fields_middleware.body_must_contain_attributes(["exercise_order"]),
-  check_invalid_tokens_middleware,
   auth_middleware,
   change_order_exercise_in_routine
 );
@@ -201,7 +190,6 @@ router.put(
  */
 router.delete(
   "/:id_routine/exercise/:id_exercise",
-  check_invalid_tokens_middleware,
   auth_middleware,
   delete_exercise_from_routine
 );
@@ -216,7 +204,6 @@ router.delete(
  */
 router.delete(
   "/:id_routine",
-  check_invalid_tokens_middleware,
   auth_middleware,
   delete_specific_routine
 );

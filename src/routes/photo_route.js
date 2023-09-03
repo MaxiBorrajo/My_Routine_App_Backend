@@ -19,8 +19,6 @@ const {
 
 const auth_middleware = require("../middlewares/auth_middleware");
 
-const check_invalid_tokens_middleware = require("../middlewares/invalid_token_middleware");
-
 //Routes
 
 /**
@@ -33,7 +31,6 @@ const check_invalid_tokens_middleware = require("../middlewares/invalid_token_mi
  */
 router.post(
   "/exercise/:id_exercise",
-  check_invalid_tokens_middleware,
   auth_middleware,
   multer_uploads,
   process_image,
@@ -50,7 +47,6 @@ router.post(
  */
 router.get(
   "/exercise/:id_exercise",
-  check_invalid_tokens_middleware,
   auth_middleware,
   cache_middleware,
   find_all_photos_of_exercise
@@ -67,7 +63,6 @@ router.get(
  */
 router.delete(
   "/:public_id/exercise/:id_exercise",
-  check_invalid_tokens_middleware,
   auth_middleware,
   delete_photo_associated_to_exercise
 );

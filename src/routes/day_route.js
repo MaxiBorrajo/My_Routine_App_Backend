@@ -17,8 +17,6 @@ const {
 
 const auth_middleware = require("../middlewares/auth_middleware");
 
-const check_invalid_tokens_middleware = require("../middlewares/invalid_token_middleware");
-
 //Routes
 
 /**
@@ -30,7 +28,6 @@ const check_invalid_tokens_middleware = require("../middlewares/invalid_token_mi
  */
 router.get(
   "/",
-  check_invalid_tokens_middleware,
   auth_middleware,
   cache_middleware,
   find_all_days
@@ -52,7 +49,6 @@ router.post(
     "id_routine",
     "id_day",
   ]),
-  check_invalid_tokens_middleware,
   auth_middleware,
   assign_day_to_routine
 );
@@ -66,7 +62,6 @@ router.post(
  */
 router.get(
   "/routine/:id_routine",
-  check_invalid_tokens_middleware,
   auth_middleware,
   cache_middleware,
   find_days_assign_to_a_routine
@@ -82,7 +77,6 @@ router.get(
  */
 router.delete(
   "/:id_day/routine/:id_routine",
-  check_invalid_tokens_middleware,
   auth_middleware,
   remove_day_assigned_to_routine
 );

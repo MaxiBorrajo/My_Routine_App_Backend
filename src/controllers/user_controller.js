@@ -54,11 +54,6 @@ const {
 } = require("../repositories/feedback_repository");
 
 const {
-  create_new_invalid_token,
-  delete_invalid_tokens_by_id_user,
-} = require("../repositories/invalid_token_repository");
-
-const {
   delete_image_in_cloud,
 } = require("../middlewares/upload_images_middleware");
 
@@ -140,7 +135,7 @@ async function login(req, res, next) {
       are_equal(found_user.length, 0) ||
       !(await match_passwords(password, found_user[0].password))
     ) {
-      throw new CustomError("Email or password are incorrect", 404)
+      throw new CustomError("Email or password are incorrect", 404);
     }
 
     return get_authorization(found_user[0], req, res, next, false);
@@ -438,17 +433,6 @@ async function update_current_user(req, res, next) {
  */
 async function logout(req, res, next) {
   try {
-    let new_invalid_token = {
-      id_user: req.id_user,
-      token: req.cookies._access_token,
-    };
-
-    await create_new_invalid_token(new_invalid_token);
-
-    new_invalid_token.token = req.cookies._refresh_token;
-
-    await create_new_invalid_token(new_invalid_token);
-
     const cookies = req.cookies;
 
     for (let cookieName in cookies) {
@@ -533,8 +517,6 @@ async function delete_user(req, res, next) {
     await delete_routines_by_id_user(req.id_user);
 
     await delete_feedback_by_id_user(req.id_user);
-
-    await delete_invalid_tokens_by_id_user(req.id_user);
 
     await delete_auth_by_id_user(req.id_user);
 

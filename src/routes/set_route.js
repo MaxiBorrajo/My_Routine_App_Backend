@@ -18,8 +18,6 @@ const {
 
 const auth_middleware = require("../middlewares/auth_middleware");
 
-const check_invalid_tokens_middleware = require("../middlewares/invalid_token_middleware");
-
 //Routes
 
 /**
@@ -49,7 +47,6 @@ router.post(
     "type",
     "quantity",
   ]),
-  check_invalid_tokens_middleware,
   auth_middleware,
   create_set
 );
@@ -63,7 +60,6 @@ router.post(
  */
 router.get(
   "/last",
-  check_invalid_tokens_middleware,
   auth_middleware,
   find_id_set_of_last_set_created
 );
@@ -87,7 +83,6 @@ router.get(
  */
 router.put(
   "/:id_set/exercise/:id_exercise",
-  check_invalid_tokens_middleware,
   auth_middleware,
   update_specific_set
 );
@@ -101,7 +96,6 @@ router.put(
  */
 router.get(
   "/exercise/:id_exercise",
-  check_invalid_tokens_middleware,
   auth_middleware,
   cache_middleware,
   find_all_sets_of_exercise
@@ -117,7 +111,6 @@ router.get(
  */
 router.delete(
   "/:id_set/exercise/:id_exercise",
-  check_invalid_tokens_middleware,
   auth_middleware,
   delete_specific_exercise
 );
