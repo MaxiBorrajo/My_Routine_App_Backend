@@ -14,7 +14,7 @@ const {
 
 const CustomError = require("../utils/custom_error");
 
-const { return_response, are_equal } = require("../utils/utils_functions");
+const { return_response } = require("../utils/utils_functions");
 
 const {
   delete_image_in_cloud,

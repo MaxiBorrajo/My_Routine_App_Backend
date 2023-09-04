@@ -66,7 +66,7 @@ async function find_all_muscle_groups(req, res, next) {
 async function assign_muscle_group_to_exercise(req, res, next) {
   try {
     const { id_exercise, id_muscle_group } = req.body;
-
+    
     await find_muscle_group_by_id_muscle_group(id_muscle_group);
 
     await find_exercise_by_id_user_id_exercise(req.id_user, id_exercise);
@@ -86,9 +86,8 @@ async function assign_muscle_group_to_exercise(req, res, next) {
     }
 
     const new_works = {
-      id_user: req.id_user,
-      id_exercise: id_exercise,
-      id_muscle_group: id_muscle_group,
+      ...req.body,
+      ...{ id_user: req.id_user },
     };
 
     await create_new_works(new_works);

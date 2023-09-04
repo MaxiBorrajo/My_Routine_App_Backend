@@ -53,9 +53,6 @@ async function create_set(req, res, next) {
     const {
       id_exercise,
       id_set,
-      weight,
-      rest_after_set,
-      set_order,
       type,
       quantity,
     } = req.body;
@@ -81,13 +78,9 @@ async function create_set(req, res, next) {
     }
 
     const new_set = {
-      id_user: req.id_user,
-      id_exercise: id_exercise,
-      id_set: id_set,
-      weight: weight,
-      rest_after_set: rest_after_set,
-      set_order: set_order,
-    };
+      ...req.body,
+      ...{id_user: req.id_user}
+    }
 
     const result = await create_new_set(new_set);
 
@@ -99,7 +92,7 @@ async function create_set(req, res, next) {
           id_exercise: id_exercise,
           repetition: quantity,
         };
-
+        
         const created_repetition_set = await create_new_repetition_set(
           new_repetition_set
         );
@@ -209,19 +202,6 @@ async function update_specific_set(req, res, next) {
       req.params.id_exercise,
       req.params.id_set
     );
-
-    // const new_information_set = {
-    //   id_user: req.id_user,
-    //   id_exercise: found_set[0].id_exercise,
-    //   id_set: found_set[0].id_set,
-    //   weight: req.body.weight ? req.body.weight : found_set[0].weight,
-    //   rest_after_set: req.body.rest_after_set
-    //     ? req.body.rest_after_set
-    //     : found_set[0].rest_after_set,
-    //   set_order: req.body.set_order
-    //     ? req.body.set_order
-    //     : found_set[0].set_order,
-    // };
 
     const new_information_set = {
       ...found_set[0],

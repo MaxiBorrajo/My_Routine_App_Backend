@@ -74,15 +74,9 @@ const _ = require("lodash");
  */
 async function create_exercise(req, res, next) {
   try {
-    const { exercise_name, time_after_exercise, description, intensity } =
-      req.body;
-
     const new_exercise = {
-      id_user: req.id_user,
-      exercise_name: exercise_name,
-      time_after_exercise: time_after_exercise,
-      description: description,
-      intensity: intensity,
+      ...req.body,
+      ...{ id_user: req.id_user },
     };
 
     await create_new_exercise(new_exercise);
@@ -336,23 +330,9 @@ async function update_specific_exercise(req, res, next) {
     );
 
     const new_exercise_information = {
-      id_user: req.id_user,
-      id_exercise: found_exercise[0].id_exercise,
-      exercise_name: req.body.exercise_name
-        ? req.body.exercise_name
-        : found_exercise[0].exercise_name,
-      time_after_exercise: req.body.time_after_exercise
-        ? req.body.time_after_exercise
-        : found_exercise[0].time_after_exercise,
-      description: req.body.description
-        ? req.body.description
-        : found_exercise[0].description,
-      is_favorite: Object.keys(req.body).includes("is_favorite")
-        ? req.body.is_favorite
-        : found_exercise[0].is_favorite,
-      intensity: req.body.intensity
-        ? req.body.intensity
-        : found_exercise[0].intensity,
+      ...found_exercise[0],
+      ...req.body,
+      ...{ id_user: req.id_user },
     };
 
     await update_exercise(new_exercise_information);

@@ -465,11 +465,9 @@ async function logout(req, res, next) {
  */
 async function send_feedback(req, res, next) {
   try {
-    const { comment } = req.body;
-
     const new_feedback = {
-      id_user: req.id_user,
-      comment: comment,
+      ...req.body,
+      ...{ id_user: req.id_user },
     };
 
     await create_new_feedback(new_feedback);

@@ -50,14 +50,7 @@ const {
  */
 async function create_routine(req, res, next) {
   try {
-    const { routine_name, time_before_start, description } = req.body;
-
-    const new_routine = {
-      id_user: req.id_user,
-      routine_name: routine_name,
-      time_before_start: time_before_start,
-      description: description,
-    };
+    const new_routine = { ...req.body, ...{ id_user: req.id_user } };
 
     await create_new_routine(new_routine);
 
@@ -255,21 +248,9 @@ async function update_specific_routine(req, res, next) {
     );
 
     const new_routine_information = {
-      id_user: req.id_user,
-      id_routine: found_routine[0].id_routine,
-      routine_name: req.body.routine_name
-        ? req.body.routine_name
-        : found_routine[0].routine_name,
-      usage_routine: req.body.usage_routine
-        ? req.body.usage_routine
-        : found_routine[0].usage_routine,
-      time_before_start: req.body.time_before_start
-        ? req.body.time_before_start
-        : found_routine[0].time_before_start,
-      description: req.body.description,
-      is_favorite: Object.keys(req.body).includes("is_favorite")
-        ? req.body.is_favorite
-        : found_routine[0].is_favorite,
+      ...found_routine[0],
+      ...req.body,
+      ...{ id_user: req.id_user },
     };
 
     await update_routine(new_routine_information);

@@ -85,9 +85,8 @@ async function assign_day_to_routine(req, res, next) {
     }
 
     const new_scheduled = {
-      id_user: req.id_user,
-      id_routine: id_routine,
-      id_day: id_day,
+      ...req.body,
+      ...{ id_user: req.id_user },
     };
 
     await create_new_scheduled(new_scheduled);
