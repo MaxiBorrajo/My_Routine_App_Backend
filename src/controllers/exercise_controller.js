@@ -260,6 +260,11 @@ async function find_all_exercises(req, res, next) {
  */
 async function find_exercises_of_routine(req, res, next) {
   try {
+    await find_routine_by_id_user_id_routine(
+      req.id_user,
+      req.params.id_routine
+    );
+    
     const key = req.originalUrl;
 
     if (req.query.not_present) {
@@ -283,10 +288,7 @@ async function find_exercises_of_routine(req, res, next) {
 
       return return_response(res, 200, found_routines, true);
     } else {
-      await find_routine_by_id_user_id_routine(
-        req.id_user,
-        req.params.id_routine
-      );
+      
 
       const found_routines = await find_exercises_by_id_user_idRoutine(
         req.id_user,

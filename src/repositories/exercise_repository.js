@@ -413,6 +413,7 @@ async function find_not_included_exercises_by_id_user_idRoutine(
     SELECT DISTINCT e.id_exercise, e.exercise_name,
     e.created_at, e.is_favorite, e.description,
     e.time_after_exercise, e.intensity FROM EXERCISE AS e
+    WHERE e.id_user = $1
     EXCEPT
     SELECT DISTINCT e.id_exercise, e.exercise_name,
     e.created_at, e.is_favorite, e.description,
@@ -433,8 +434,8 @@ async function find_not_included_exercises_by_id_user_idRoutine(
         order
       );
 
-      const result = _.difference(filtered, found_exercises.rows);
-
+      const result = _.intersectionWith(filtered, found_exercises.rows, _.isEqual);
+      
       return result;
     } else if (filter === "muscle_group") {
       const values = filter_values.map((value) => parseInt(value));
@@ -445,7 +446,7 @@ async function find_not_included_exercises_by_id_user_idRoutine(
         order
       );
 
-      const result = _.difference(filtered, found_exercises.rows);
+      const result = _.intersectionWith(filtered, found_exercises.rows, _.isEqual);
 
       return result;
     } else if (filter === "intensity") {
@@ -456,7 +457,9 @@ async function find_not_included_exercises_by_id_user_idRoutine(
         sort_by,
         order
       );
-      const result = _.difference(filtered, found_exercises.rows);
+
+      const result = _.intersectionWith(filtered, found_exercises.rows, _.isEqual);
+
       return result;
     }
 
