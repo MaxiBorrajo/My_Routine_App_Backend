@@ -199,7 +199,6 @@ router.put(
  */
 router.delete(
   "/credentials",
-  auth_middleware,
   logout
 );
 
